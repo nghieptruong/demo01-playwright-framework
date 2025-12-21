@@ -72,7 +72,7 @@ To get started with the tests:
 1. **Clone the repository**
 
 	```bash
-	git clone https://github.com/trang-le29893/demo01-playwright-framework.git
+	git clone https://github.com/trang-le298/demo01-playwright-framework.git
 	cd demo01-playwright-framework  
 	```
 
