@@ -51,21 +51,21 @@ export class MoviePage extends CommonPage {
     }
 
     // ========== Getters ==========
-    async getMovieTitle() {
+    async getMovieTitle(): Promise<string> {
         return await this.getElementText(this.lblMovieTitle);
     }
 
-    async getMovieDurationText() {
+    async getMovieDurationText(): Promise<string> {
         return await this.getElementText(this.lblMovieDuration);
     }
 
-    async getMovieDurationMinutes() {
+    async getMovieDurationMinutes(): Promise<number> {
         const durationText = await this.getMovieDurationText();
         const durationMin = durationText.replace('phút', '').trim();
         return parseInt(durationMin);
     }
  
-    async getMovieRating() {
+    async getMovieRating(): Promise<number> {
         const ratingValue = await this.getElementAttribute(this.lblRating, 'aria-valuenow');
         return ratingValue ? parseFloat(ratingValue) / 10 : 0;
     }

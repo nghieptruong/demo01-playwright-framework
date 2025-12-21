@@ -61,13 +61,13 @@ export class SlideCarouselHome extends BasePage {
         return this.page.locator(SlideCarouselHome.SELECTORS.btnCloseVideo);
     }
 
-    getMovieCardByMovieId(movieId: string) {
+    getMovieCardByMovieId(movieId: string): Locator {
         const href = pageURLs.movie(movieId);
         return this.slideCards
             .filter({ has: this.page.locator(`a[href*='${href}']`) }).first();
     }
 
-    getShowtimesPanelForMovie(movieItem: Locator) {
+    getShowtimesPanelForMovie(movieItem: Locator): Locator {
 
         const movieShowtimeContainer = movieItem.locator("div")
             .filter({ has: this.page.getByRole("heading", { level: 4 }) })
@@ -77,11 +77,11 @@ export class SlideCarouselHome extends BasePage {
         return movieShowtimeContainer;
     }
 
-    getFindTicketsLinkForMovie(movieItem: Locator) {
+    getFindTicketsLinkForMovie(movieItem: Locator): Locator {
         return movieItem.getByRole("link", { name: "MUA VÉ" })
     }
 
-    getLnkMoviePageByMovieId(movieId: string) {
+    getLnkMoviePageByMovieId(movieId: string): Locator {
         const movieItem = this.getMovieCardByMovieId(movieId);
         return movieItem.locator(SlideCarouselHome.SELECTORS.lnkGoToMoviePage);
     }
@@ -94,15 +94,15 @@ export class SlideCarouselHome extends BasePage {
     }
 
     // ========== Get Info ==========
-    async countSlides() {
+    async countSlides(): Promise<number> {
         return await this.getElementCount(this.btnSlideNavigator);
     }
 
-    async countMovies() {
+    async countMovies(): Promise<number> {
         return await this.getElementCount(this.slideCards);
     }
 
-    async getActiveSlideIndex() {
+    async getActiveSlideIndex(): Promise<number> {
 
         const buttons = this.btnSlideNavigator;
 
@@ -116,7 +116,7 @@ export class SlideCarouselHome extends BasePage {
         throw new Error('No pre-selected slide found.')
     }
 
-    async getNonActiveSlideIndexes() {
+    async getNonActiveSlideIndexes(): Promise<number[]> {
 
         let indexes: number[] = [];
 
@@ -133,7 +133,7 @@ export class SlideCarouselHome extends BasePage {
         return indexes;
     }
 
-    async getMovieId(movieItem: Locator) {
+    async getMovieId(movieItem: Locator): Promise<string> {
 
         await this.waitForElementVisible(movieItem);
 
@@ -143,12 +143,12 @@ export class SlideCarouselHome extends BasePage {
 
     }
 
-    async getMovieInfoByMovieId(movieId: string) {
+    async getMovieInfoByMovieId(movieId: string): Promise<CarouselMovieInfo> {
         const movieItem = this.getMovieCardByMovieId(movieId);
         return await this.extractMovieInfoFromLocator(movieItem);
     }
 
-    async extractMovieInfoFromLocator(movieItem: Locator) {
+    async extractMovieInfoFromLocator(movieItem: Locator): Promise<CarouselMovieInfo> {
 
         const id = await this.getMovieId(movieItem);
 
@@ -180,7 +180,7 @@ export class SlideCarouselHome extends BasePage {
 
     }
 
-    async getCurrentlyDisplayedMoviesInfo() {
+    async getCurrentlyDisplayedMoviesInfo(): Promise<CarouselMovieInfo[]> {
 
         const count = await this.slideCards.count();
 
@@ -198,7 +198,7 @@ export class SlideCarouselHome extends BasePage {
         return allMoviesInfo;
     }
 
-    async getAllMoviesInfoInCarousel() {
+    async getAllMoviesInfoInCarousel(): Promise<CarouselMovieInfo[]> {
 
         const count = await this.countSlides();
 
@@ -216,7 +216,7 @@ export class SlideCarouselHome extends BasePage {
         return allMoviesInfo;
     }
 
-    async isSlideActive(slideIndex: number) {
+    async isSlideActive(slideIndex: number): Promise<boolean> {
         const slideBtn = this.btnSlideNavigator.nth(slideIndex);
 
         const style = await this.getElementAttribute(slideBtn, 'style');

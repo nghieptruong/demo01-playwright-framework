@@ -47,14 +47,6 @@ export class AccountPage extends BaseForm<AccountDataFields> {
         await this.navigateToPage(pageURLs.account);
     }
 
-    // async navigateToAccountPageAndWaitUserInfo(): Promise<void> {
-    //     await Promise.all([
-    //         this.page.waitForResponse(userInfoRegex),
-    //         this.navigateToPage(pageURLs.account)
-    //     ]);
-
-    // }
-
     // ========== Waits ========== 
 
     async waitForUserInfoForm() {

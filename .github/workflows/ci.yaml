@@ -9,7 +9,7 @@ on:
       browser:
         description: "Browser to run tests on (chromium|firefox|webkit|all)"
         required: false
-        default: "all"
+        default: "chromium"
                 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -26,7 +26,7 @@ jobs:
         shardTotal: [12]
 
     env:
-      SELECTED_BROWSER: ${{ github.event.inputs.browser || 'all' }}
+      SELECTED_BROWSER: ${{ github.event.inputs.browser || 'chromium' }}
 
     steps:
       - uses: actions/checkout@v4

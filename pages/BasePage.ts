@@ -84,12 +84,12 @@ export abstract class BasePage {
         return locator.count();
     }
 
-    async getFieldValue(locator: Locator) {
+    async getFieldValue(locator: Locator): Promise<string> {
         await this.waitForElementVisible(locator);
         return await locator.inputValue();
     }
 
-    async getBackgroundColor(locator: Locator) {
+    async getBackgroundColor(locator: Locator): Promise<string> {
         return locator.evaluate(el => getComputedStyle(el).backgroundColor);
     }
 

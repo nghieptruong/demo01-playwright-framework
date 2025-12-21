@@ -6,7 +6,6 @@ import { VerticalTabsHome } from "./components/VerticalTabsHome";
 import { pageURLs } from "../tests/utils/routes";
 import { SearchBarHome } from "./components/SearchBarHome";
 
-
 export class HomePage extends CommonPage {
 
     // ========== Components ==========
@@ -30,9 +29,7 @@ export class HomePage extends CommonPage {
         await this.waitForElementAttacched(this.page.locator('div.App > div:nth-child(3)'));
     }
 
-    async verifyNoNavigation(): Promise<void> {
+    async verifyNoNavigation() {
         await super.verifyNoNavigation(pageURLs.home);
     }
 }
-
-

@@ -12,20 +12,6 @@ export async function extractSeatingData(showtimeId: string): Promise<SeatInfo[]
     return showtimeDetails.danhSachGhe;
 }
 
-// async function getSeatInfoFromApi(showtimeId: string, seatNumber: string) {
-//     const seatingData = await extractSeatingData(showtimeId);
-
-//     const seat = seatingData.find(
-//         s => s.tenGhe === seatNumber
-//     );
-
-//     if (!seat) {
-//         throw new Error(`Cannot find seat ${seatNumber} for showtime ${showtimeId}`);
-//     }
-
-//     return seat;
-// }
-
 export async function getAvailableSeats(showtimeId: string): Promise<string[]> {
     const data = await extractSeatingData(showtimeId);
     const available = data.filter(seat => seat.daDat === false).map(avail => avail.tenGhe);
@@ -49,25 +35,6 @@ export async function getAvailableVipSeats(showtimeId: string): Promise<string[]
     const vip = data.filter(seat => seat.daDat === false && seat.loaiGhe === 'Vip').map(v => v.tenGhe);
     return vip;
 }
-
-// export async function getSeatBookingStatusAndType(showtimeId: string, seatNumber: string) {   // check if can removed
-//     const seat = await getSeatInfoFromApi(showtimeId, seatNumber);
-
-//     return {
-//         seatType: seat.loaiGhe,
-//         bookingStatus: seat.daDat
-//     };
-// }
-
-// export async function getSeatBookingStatus(showtimeId: string, seatNumber: string) {
-//     const seat = await getSeatInfoFromApi(showtimeId, seatNumber);
-//     return seat.daDat;
-// }
-
-// export async function getSeatType(showtimeId: string, seatNumber: string) {
-//     const seat = await getSeatInfoFromApi(showtimeId, seatNumber);
-//     return seat.tenGhe;
-// }
 
 export async function calculatePrice(showtimeId: string, seats: string[]): Promise<number> {
 

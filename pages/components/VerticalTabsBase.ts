@@ -29,24 +29,24 @@ export abstract class VerticalTabsBase extends BasePage {         // used for ma
         return this.getTabsFromTabList(this.tabLists);
     }
 
-    getTabsFromTabList(tablist: Locator) {
+    getTabsFromTabList(tablist: Locator): Locator {
         return tablist.getByRole('tab');
     }
 
-    getActiveTab(tablist: Locator) {
+    getActiveTab(tablist: Locator): Locator {
         return tablist.getByRole('tab', { selected: true });
     }
 
-    getNonActiveTabs(tablist: Locator) {
+    getNonActiveTabs(tablist: Locator): Locator {
         return tablist.locator('tab[aria-selected="false"]');     // why getByRole("tab", ( { selected: false })) doesnt work?
     }
 
-    getTabLocatorByTabName(tablist: Locator, tabName: string) {
+    getTabLocatorByTabName(tablist: Locator, tabName: string): Locator {
         return tablist.getByRole('tab', { name: tabName });
     }
 
     // ========== Get Info ==========
-    async getTabImageAltText(tab: Locator) {
+    async getTabImageAltText(tab: Locator): Promise<string> {
         await tab.waitFor();
         const imgLocator = tab.locator(VerticalTabsBase.SELECTORS.image);
         if (!await imgLocator.isVisible()) {
@@ -55,7 +55,7 @@ export abstract class VerticalTabsBase extends BasePage {         // used for ma
         return await this.getElementAttribute(imgLocator, 'alt');
     }
 
-    async getAllTabAltTexts(tablist: Locator) {
+    async getAllTabAltTexts(tablist: Locator): Promise<string[]> {
 
         const tabs = this.getTabsFromTabList(tablist);
         await tabs.first().waitFor();
@@ -72,7 +72,7 @@ export abstract class VerticalTabsBase extends BasePage {         // used for ma
         return altTexts;
     }
 
-    async isTabSelected(tab: Locator) {
+    async isTabSelected(tab: Locator): Promise<boolean> {
         const isSelected = await tab.getAttribute('aria-selected');
         if (!isSelected) {
             throw new Error(`aria-selected attribute not found for tab`);
@@ -81,10 +81,9 @@ export abstract class VerticalTabsBase extends BasePage {         // used for ma
     }
 
     // ========== Actions ==========
-    async selectTab(tab: Locator) {
+    async selectTab(tab: Locator): Promise<void> {
         await this.clickElement(tab);
         await expect(tab).toHaveAttribute("aria-selected", "true");
-
     }
 
 }

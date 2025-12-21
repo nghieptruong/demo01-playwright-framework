@@ -3,7 +3,6 @@ import { BaseForm } from "./BaseForm";
 import { pageURLs } from "../tests/utils/routes";
 import { LoginField } from "../tests/types/auth.types";
 
-
 export class LoginPage extends BaseForm<LoginField> {
 
     // ========== Static Configuration ==========
@@ -35,27 +34,33 @@ export class LoginPage extends BaseForm<LoginField> {
     get btnLogin() {
         return this.page.getByRole('button', { name: LoginPage.ACCESSIBLE_NAMES.btnLogin })
     }
+
     get alertSuccessMsg(): Locator {
         return this.page.getByRole('dialog', { name: LoginPage.ACCESSIBLE_NAMES.alertLoginSuccess });
     }
+
     get txtUsername() {
         return this.getLocatorForField('taiKhoan');
     }
+
     get txtPassword() {
         return this.getLocatorForField('matKhau');
     }
+
     get btnPasswordToggle() {
         return this.getFieldVisibilityToggleButton(this.txtPassword);
     }
+
     get alertInvalidCredentials() {
         return this.page.getByRole('alert');
     }
+
     get alertPasswordFieldError() {
         return this.getErrorMsgLocatorForField('matKhau');
     }
 
     // ========== Get Info ==========
-    async getPasswordVisibilityState() {
+    async getPasswordVisibilityState(): Promise<boolean> {
         return this.isFieldInputVisible(this.txtPassword);
     }
 

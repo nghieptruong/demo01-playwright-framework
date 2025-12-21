@@ -24,39 +24,43 @@ export class VerticalTabsMovie extends VerticalTabsBase {
     get cinemaTabList() {
         return this.tabLists;
     }
+
     get ShowtimeTabPanel() {
         return this.tabPanels;
     }
+
     get cinemaTabs() {
         return this.getTabsFromTabList(this.cinemaTabList);
     }
+
     get branchNameLocators() {
         return this.ShowtimeTabPanel.getByRole('heading', { level: 3 });
     }
+
     get lnkShowtimes() {
         return this.root.locator(VerticalTabsMovie.CUSTOM_SELECTORS.lnkShowtime);
     }
-    getLnkShowtimeById(showtimeId: string) {
+
+    getLnkShowtimeById(showtimeId: string): Locator {
         const href = `${pageURLPaths.showtime}${showtimeId}`;
         return this.root.locator(`a[href*='${href}']`);
     }   
 
-
-    // Conditional locator
-    getCinemaTabByCinemaName(cinemaName: string) {
+    getCinemaTabByCinemaName(cinemaName: string): Locator {
         return this.getTabLocatorByTabName(this.cinemaTabList, cinemaName);
     }
-    getBranchSectionByShowtimeLink(showtimeLink: Locator) {
+
+    getBranchSectionByShowtimeLink(showtimeLink: Locator): Locator {
         return showtimeLink.locator('xpath=./preceding::h3[1]');
     }
 
     // ========== Get Info ==========
-    async getCinemaNameForTab(cinemaTab: Locator) {
+    async getCinemaNameForTab(cinemaTab: Locator): Promise<string> {
         const altText = await this.getTabImageAltText(cinemaTab);
         return altText;
     }
 
-    async getAllCinemaNames() {
+    async getAllCinemaNames(): Promise<string[]> {
 
         const cinemaCount = await this.countCinemas();
 
@@ -72,7 +76,7 @@ export class VerticalTabsMovie extends VerticalTabsBase {
         return cinemaAliases;
     }
     
-    async getShowtimesGroupedByBranch() {
+    async getShowtimesGroupedByBranch(): Promise<Record<string, string[]>> {
 
         let branchAndShowtimesMap: Record<string, string[]> = {};
         const showtimeLinksCount = await this.getElementCount(this.lnkShowtimes);
@@ -99,13 +103,13 @@ export class VerticalTabsMovie extends VerticalTabsBase {
         return branchAndShowtimesMap;
     }
 
-    async getShowtimeIdFromLink(showtimeLink: Locator) {
+    async getShowtimeIdFromLink(showtimeLink: Locator): Promise<string> {
         const href = await this.getElementAttribute(showtimeLink, 'href');
         if (!href) throw new Error(`href not found. Locator: ${showtimeLink}`);
         return extractShowtimeId(href);
     }
 
-    async getAllShowtimeIds() {
+    async getAllShowtimeIds(): Promise<string[]> {
         const showtimeCount = await this.getElementCount(this.lnkShowtimes);
         const showtimeIds: string[] = [];
         for (let i = 0; i < showtimeCount; i++) {
@@ -117,7 +121,7 @@ export class VerticalTabsMovie extends VerticalTabsBase {
     }
 
     // ========== Actions ==========
-    async countCinemas() {
+    async countCinemas(): Promise<number> {
         await this.waitForElementVisible(this.cinemaTabs.first());
         return await this.getElementCount(this.cinemaTabs);
     }

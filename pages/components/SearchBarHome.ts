@@ -19,9 +19,9 @@ export class SearchBarHome extends BasePage {
 
     // ========== Actions ========== (to implement later)
     
-    async searchKeyword(keyword: string) {
-        await this.setValueAndBlur(this.txtSearchBar, keyword);
-        await this.clickElement(this.btnSearchSubmit);
-    }
+    // async searchKeyword(keyword: string) {
+    //     await this.setValueAndBlur(this.txtSearchBar, keyword);
+    //     await this.clickElement(this.btnSearchSubmit);
+    // }
 
 }

@@ -96,7 +96,7 @@ export class TopBarNavigation extends BasePage {
     }
 
     // ========== Get Info ==========
-    async getUserDisplayedName() {
+    async getUserDisplayedName(): Promise<string> {
         return await this.getElementText(this.lnkUserProfile);
     }
 

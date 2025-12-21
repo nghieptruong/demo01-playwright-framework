@@ -68,11 +68,11 @@ export class RegisterPage extends BaseForm<RegisterField> {
     }
 
     // ========== Get Info ==========
-    async isPasswordVisible() {
+    async isPasswordVisible(): Promise<boolean> {
         return this.isFieldInputVisible(this.txtPassword);
     }
 
-    async isConfirmPasswordVisible() {
+    async isConfirmPasswordVisible(): Promise<boolean> {
         return this.isFieldInputVisible(this.txtConfirmPassword);
     }
 
@@ -133,5 +133,4 @@ export class RegisterPage extends BaseForm<RegisterField> {
             `Incorrect uniqueness error text`
         ).toHaveText(expectedText);
     }
-
 }

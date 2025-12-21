@@ -152,28 +152,28 @@ export class ShowtimePage extends CommonPage {
 
     // ========== Get Info ==========
     // Seat map
-    getCurrentShowtimeIdNumber() {
+    getCurrentShowtimeIdNumber(): number {
         const url = this.page.url();
         const id = url.split(pageURLPaths.showtime).pop() ?? '';
         return parseInt(id);
     }
 
-    async countTotalSeats() {
+    async countTotalSeats(): Promise<number> {
         return await this.getElementCount(this.btnSeats);
     }
 
-    async getAvailableSeatNumbers() {
+    async getAvailableSeatNumbers(): Promise<string[]> {
         const availableSeatNumbers: string[] = await this.btnAvailableSeats.evaluateAll((seats) => {
             return seats.map(seat => seat.textContent?.trim() || '');
         });
         return availableSeatNumbers;
     }
 
-    async countReservedSeats() {
+    async countReservedSeats(): Promise<number> {
         return await this.getElementCount(this.btnReservedSeats);
     }
 
-    async getSeatsMatchingLegendMarker(legend: Locator) {
+    async getSeatsMatchingLegendMarker(legend: Locator): Promise<string[]> {
 
         const backgroundColor = await this.getBackgroundColor(legend);
 
@@ -187,15 +187,15 @@ export class ShowtimePage extends CommonPage {
         return matchedSeatNumbers;
     }
 
-    async getAvailableStandardSeatNumbers() {
+    async getAvailableStandardSeatNumbers(): Promise<string[]> {
         return await this.getSeatsMatchingLegendMarker(this.lblLegendStandard);
     }
 
-    async getAvailableVipSeatNumbers() {
+    async getAvailableVipSeatNumbers(): Promise<string[]> {
         return await this.getSeatsMatchingLegendMarker(this.lblLegendVip);
     }
 
-    async isSeatSelected(seatNumber: string) {
+    async isSeatSelected(seatNumber: string): Promise<boolean> {
 
         const btnSeat = this.getSeatBtnBySeatNumber(seatNumber);
         const btnStyle = await this.getElementAttribute(btnSeat, "style");
@@ -213,7 +213,7 @@ export class ShowtimePage extends CommonPage {
     }
 
     // Order preview 
-    async getTextForShowtimeInfoField(showtimeField: string) {
+    async getTextForShowtimeInfoField(showtimeField: string): Promise<string> {
         const fieldLocator = this.getShowtimeFieldLocatorByName(showtimeField);
 
         if (await fieldLocator.isHidden()) {
@@ -247,16 +247,16 @@ export class ShowtimePage extends CommonPage {
         };
     }
 
-    async getPreviewSelectedSeats() {
+    async getPreviewSelectedSeats(): Promise<string[]> {
         const previewSeatsText = await this.getTextForShowtimeInfoField(ShowtimePage.ACCESSIBLE_NAMES.selectedSeats);
         return this.extractPreviewSeatNumbers(previewSeatsText);
     }
 
-    async getPreviewPriceText() {
+    async getPreviewPriceText(): Promise<string> {
         return await this.getElementText(this.lblPrice);
     }
 
-    async getPreviewPrice() {
+    async getPreviewPrice(): Promise<number> {
         const priceText = await this.getPreviewPriceText();
         return this.extractPreviewPrice(priceText);
     }
@@ -274,7 +274,7 @@ export class ShowtimePage extends CommonPage {
     }
 
     // Helper to extract info
-    extractPreviewSeatNumbers(previewSeatsText: string) {
+    extractPreviewSeatNumbers(previewSeatsText: string): string[] {
         if (!previewSeatsText) {
             return [];
         }
@@ -285,11 +285,11 @@ export class ShowtimePage extends CommonPage {
         return selectedSeats;
     }
 
-    extractPreviewPrice(previewPriceText: string) {
+    extractPreviewPrice(previewPriceText: string): number {
         return parseInt(previewPriceText);
     }
 
-    splitDateAndTime(showtimeText: string) {
+    splitDateAndTime(showtimeText: string): { date: string, time: string } {
         const time = showtimeText.split(' -').pop() ?? '';
         const date = showtimeText.split(' -').shift() ?? '';
         return {
@@ -440,6 +440,3 @@ export class ShowtimePage extends CommonPage {
         await this.verifyNoNavigation(currentURL);
     }
 }
-
-
-
