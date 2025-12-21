@@ -9,10 +9,13 @@ test.describe('Responsive Homepage UI', () => {
   let homePage: HomePage;
 
   test.beforeEach(async ({ page }) => {
-    await page.setViewportSize({ width: 959, height: 800 });
 
-    homePage = new HomePage(page);
-    await homePage.navigateToHomePageAndWait();
+    await test.step('Set viewport to mobile size and navigate to homepage', async () => {
+      await page.setViewportSize({ width: 959, height: 800 });
+
+      homePage = new HomePage(page);
+      await homePage.navigateToHomePageAndWait();
+    });
 
   });
 

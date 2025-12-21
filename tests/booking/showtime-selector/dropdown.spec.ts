@@ -34,24 +34,31 @@ test.describe('Valid Ticket Search With Filters', () => {
 
     test('Valid Ticket Search With Complete Filters @smoke @regression', async ({ homePage }) => {
 
-        // Pick a random showtime first to make sure filters wont return empty showtime
-        const sampleShowtimeId = pickRandomItem(await extractShowtimeIdsForAllMovies());
-        const showtimeInfo = await fetchShowtimeDetailsByShowtimeId(sampleShowtimeId);
+        let movieId: string;
+        let cinemaBranchName: string;
+        let sampleShowtimeId: string;
 
-        // Get movieId and cinema branch name from showtime info to select in filters
-        const movieId = await findMovieIdByShowtimeId(sampleShowtimeId);
-        const cinemaBranchName = showtimeInfo.thongTinPhim.tenCumRap;
+        await test.step(`Find a valid movie, cinema branch, and showtime filter to run test`, async () => {
+            // Pick a random showtime first to make sure filters wont return empty showtime
+            sampleShowtimeId = pickRandomItem(await extractShowtimeIdsForAllMovies());
+            const showtimeInfo = await fetchShowtimeDetailsByShowtimeId(sampleShowtimeId);
 
-        // Select each filter
-        await homePage.showtimeSelector.selectMovieById(movieId);
-        await homePage.showtimeSelector.selectCinemaBranchByName(cinemaBranchName);
-        await homePage.showtimeSelector.selectShowtimeById(sampleShowtimeId);
+            // Get movieId and cinema branch name from showtime info to select in filters
+            movieId = await findMovieIdByShowtimeId(sampleShowtimeId);
+            cinemaBranchName = showtimeInfo.thongTinPhim.tenCumRap;
+        });
 
-        // Click button to search for tickets
-        await homePage.showtimeSelector.clickFindTicketsButton();
+        await test.step(`Apply filters and click Find ticket button`, async () => {
+            await homePage.showtimeSelector.selectMovieById(movieId);
+            await homePage.showtimeSelector.selectCinemaBranchByName(cinemaBranchName);
+            await homePage.showtimeSelector.selectShowtimeById(sampleShowtimeId);
 
-        // Verify navigation to correct showtime page
-        await homePage.verifyNavigationToShowtimePage(sampleShowtimeId);
+            await homePage.showtimeSelector.clickFindTicketsButton();
+        });
+
+        await test.step(`Verify navigation to correct showtime page`, async () => {
+            await homePage.verifyNavigationToShowtimePage(sampleShowtimeId);
+        });
     })
 })
 

@@ -8,18 +8,21 @@ import { getSampleShowtimesWithAvailableSeats } from "../utils/booking.helpers";
 test.describe('Order History Verification', () => {
 
   test.beforeEach(async ({ loginPage }) => {
-    // instead of using fixture to avoid potential errors when run parallel tests
-    const user = userBooking[3];
 
-    await loginPage.navigateToLoginPage();
-    await loginPage.fillLoginFormAndSubmit(user.taiKhoan, user.matKhau);
-    await loginPage.verifySuccessMsgAndLoggedInStatus();
+    await test.step('Login as test user before each test', async () => {
+      // instead of using fixture to avoid potential errors when run parallel tests
+      const user = userBooking[3];
+
+      await loginPage.navigateToLoginPage();
+      await loginPage.fillLoginFormAndSubmit(user.taiKhoan, user.matKhau);
+      await loginPage.verifySuccessMsgAndLoggedInStatus();
+    });
   });
 
-  test('Order History displays new booking data correctly @regression', async ( {page} ) => {
+  test('Order History displays new booking data correctly @regression', async ({ page }) => {
 
     const accountPage = new AccountPage(page);
-    
+
     let initialOrderCount: number;
     let showtimeId: string;
     let newOrder: { movieTitle: string; bookedSeats: string[]; price: string };

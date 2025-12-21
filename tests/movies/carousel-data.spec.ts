@@ -11,7 +11,6 @@ test.describe('Verify Movie Carousel Data Accuracy: UI vs API', () => {
 
     test('Carousel Displays Correct Movies', async ({ homePage }) => {
 
-        // Capture and compare all movies info in all slides vs api data
         const uiMovies = await homePage.featuredMoviesCarousel.getAllMoviesInfoInCarousel();
         const apiMovies = await extractKeyMovieInfo();
 

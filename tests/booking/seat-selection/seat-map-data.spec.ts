@@ -10,7 +10,7 @@ test.describe('Seat Map Data Accuracy: UI vs API', () => {
 
         let sampleShowtimeIds: string[] = [];
 
-        await test.step(`Pick random sample showtimes`, async () => {
+        await test.step(`Pick random sample showtimes to run tests`, async () => {
 
             sampleShowtimeIds = await getRandomSampleShowtimeIds({ sampleSize: 2 });
 
@@ -51,6 +51,7 @@ test.describe('Seat Map Data Accuracy: UI vs API', () => {
         })
 
         for (const showtime of sampleShowtimeIds) {
+           
             await test.step(`Verify reserved seat count and sample seats state for showtime: ${showtime}`, async () => {
 
                 // Go to showtime page
@@ -97,8 +98,6 @@ test.describe('Seat Map Data Accuracy: UI vs API', () => {
         for (const showtime of sampleShowtimeIds) {
 
             await test.step(`Verify UI standard seat numbers match Api for showtime: ${showtime}`, async () => {
-
-                // Go to showtime page
                 const showtimePage = new ShowtimePage(page);
                 await showtimePage.navigateToShowtimePageAndWait(showtime);
 
@@ -119,6 +118,7 @@ test.describe('Seat Map Data Accuracy: UI vs API', () => {
         await test.step(`Find sample showtimes with available VIP seats`, async () => {
 
             const sampleShowtimes = await getSampleShowtimesWithAvailableVipSeats({ sampleSize: 2 });
+
             test.skip(sampleShowtimes.length === 0, 'Test skipped: No showtimes with availale Vip seats found.');
 
             sampleShowtimeIds = sampleShowtimes.map(s => s.maLichChieu.toString());
@@ -128,7 +128,6 @@ test.describe('Seat Map Data Accuracy: UI vs API', () => {
 
             await test.step(`Verify UI standard seat numbers match Api for showtime: ${showtime}`, async () => {
 
-                // Go to showtime page
                 const showtimePage = new ShowtimePage(page);
                 await showtimePage.navigateToShowtimePageAndWait(showtime);
 

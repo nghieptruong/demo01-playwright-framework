@@ -16,20 +16,25 @@ test.describe('Seat Preview Dynamic Behavior', () => {
 
     test('Selecting and Unselecting seats updates seat preview @regression', async ({ }) => {
 
-        // Pick sample eligible showtimes to test
-        const sampleShowtimes = await getSampleShowtimesWithAvailableSeats({ seatQuantity: requiredSeatsMin });
-        const sampleShowtimeIds = sampleShowtimes.map(s => s.maLichChieu.toString());
+        let sampleShowtimeIds: string[] = [];
+        let seatsToBook: string[] = [];
+
+        await test.step(`Find sample showtimes with available seats to run test`, async () => {
+            const sampleShowtimes = await getSampleShowtimesWithAvailableSeats({ seatQuantity: requiredSeatsMin });
+            sampleShowtimeIds = sampleShowtimes.map(s => s.maLichChieu.toString());
+        });
 
         for (const showtime of sampleShowtimeIds) {
 
-            await test.step(`Verify seat preview for showtime ${showtime}`, async () => {
-                // Go to showtime page
+            await test.step(`Go to showtime ${showtime} page and pick random available seats to test`, async () => {
                 await showtimePage.navigateToShowtimePageAndWait(showtime);
 
                 // Pick random available seats (default 2)
                 const availableSeats = await getAvailableSeats(showtime);
-                const seatsToBook = getRandomSeatNumbersPreferConsecutive(availableSeats);
+                seatsToBook = getRandomSeatNumbersPreferConsecutive(availableSeats);
+            });
 
+            await test.step(`Verify seat preview updates correctly when selecting seats`, async () => {
                 // Verify initial preview does not show these seats
                 const previewSeats = await showtimePage.getPreviewSelectedSeats();
 
@@ -44,7 +49,9 @@ test.describe('Seat Preview Dynamic Behavior', () => {
                     message: `Preview did not update correctly. Selected seats: ${seatsToBook}.`,
                 }).toEqual(expect.arrayContaining(seatsToBook));
 
-                // Unselect seats & Verify they are removed from preview
+            });
+
+            await test.step(`Verify seat preview updates correctly when deselecting seats`, async () => {
                 await showtimePage.unselectSelectedSeats(seatsToBook);
 
                 await expect.poll(() => showtimePage.getPreviewSelectedSeats(), {
@@ -59,47 +66,59 @@ test.describe('Price Preview Dynamic Behavior', () => {
 
     test('Selecting and Unselecting seats updates price preview @regression', async ({ }) => {
 
-        const sampleShowtimes = await getSampleShowtimesWithAvailableSeats({ seatQuantity: requiredSeatsMin });
-        const sampleShowtimeIds = sampleShowtimes.map(s => s.maLichChieu.toString());
+        let sampleShowtimeIds: string[] = [];
+        let seatsToBook: string[] = [];
+        let postAddPrice: number;
+
+        await test.step(`Find sample showtimes with available seats to run test`, async () => {
+            const sampleShowtimes = await getSampleShowtimesWithAvailableSeats({ seatQuantity: requiredSeatsMin });
+            sampleShowtimeIds = sampleShowtimes.map(s => s.maLichChieu.toString());
+        });
 
         for (const showtime of sampleShowtimeIds) {
 
-            // Go to showtime page
-            await showtimePage.navigateToShowtimePageAndWait(showtime);
+            await test.step(`Go to showtime ${showtime} page and pick random available seats to test`, async () => {
+                await showtimePage.navigateToShowtimePageAndWait(showtime);
 
-            // Pick random available seats (3 seats)
-            const availableSeats = await getAvailableSeats(showtime);
-            const seatsToBook = getRandomSeatNumbersPreferConsecutive(availableSeats, 3); // check
+                // Pick random available seats (3 seats)
+                const availableSeats = await getAvailableSeats(showtime);
+                seatsToBook = getRandomSeatNumbersPreferConsecutive(availableSeats, 3); // check
+            });
 
-            // Get initial price info
-            const initialPrice = await showtimePage.getPreviewPrice();
+            await test.step(`Verify price preview updates correctly when selecting seats`, async () => {
+                // Get initial price info
+                const initialPrice = await showtimePage.getPreviewPrice();
 
-            // Calculate additional cost
-            const additionalCost = await calculatePrice(showtime, seatsToBook);
-            const expectedHigherPrice = initialPrice + additionalCost;
+                // Calculate additional cost
+                const additionalCost = await calculatePrice(showtime, seatsToBook);
+                const expectedHigherPrice = initialPrice + additionalCost;
 
-            // Select seats & Verify that price is correctly added 
-            await showtimePage.selectNonSelectedSeats(seatsToBook);
+                // Select seats & Verify that price is correctly added 
+                await showtimePage.selectNonSelectedSeats(seatsToBook);
 
-            const softExpect = expect.configure({ soft: true });
-            await softExpect.poll(async () => showtimePage.getPreviewPrice(), {
-                message: `Price did not update correctly after selecting seats. Expected price: ${expectedHigherPrice}`,
-            }).toEqual(expectedHigherPrice);
+                const softExpect = expect.configure({ soft: true });
+                await softExpect.poll(async () => showtimePage.getPreviewPrice(), {
+                    message: `Price did not update correctly after selecting seats. Expected price: ${expectedHigherPrice}`,
+                }).toEqual(expectedHigherPrice);
 
-            // Capture updated price as new baseline to test unselect action 
-            const postAddPrice = await showtimePage.getPreviewPrice();
+                // Capture updated price as new baseline to test unselect action 
+                postAddPrice = await showtimePage.getPreviewPrice();
 
-            // Pick random seats to unselect (default 2, but not more than selected)
-            const seatsToRemove = getRandomSeatNumbersPreferConsecutive(seatsToBook);
+            });
 
-            const reducedCost = await calculatePrice(showtime, seatsToRemove);
-            const expectedLowerPrice = postAddPrice - reducedCost;
+            await test.step(`Verify price preview updates correctly when deselecting seats`, async () => {
+                // Pick random seats to unselect (default 2, but not more than selected)
+                const seatsToRemove = getRandomSeatNumbersPreferConsecutive(seatsToBook);
 
-            await showtimePage.unselectSelectedSeats(seatsToRemove);
+                const reducedCost = await calculatePrice(showtime, seatsToRemove);
+                const expectedLowerPrice = postAddPrice - reducedCost;
 
-            await expect.poll(() => showtimePage.getPreviewPrice(), {
-                message: `Price did not update correctly after unselecting seats. Expected price: ${expectedLowerPrice}`,
-            }).toEqual(expectedLowerPrice);
+                await showtimePage.unselectSelectedSeats(seatsToRemove);
+
+                await expect.poll(() => showtimePage.getPreviewPrice(), {
+                    message: `Price did not update correctly after unselecting seats. Expected price: ${expectedLowerPrice}`,
+                }).toEqual(expectedLowerPrice);
+            });
         }
     })
 })

@@ -20,9 +20,9 @@ test.describe('Seat Selectability Verification', () => {
 
     test('Unavailable seats are non-selectable @regression', async () => {
 
-        await test.step(`Find sample showtimes with reserved seats`, async () => {
+        await test.step(`Find sample showtimes with reserved seats to run tests`, async () => {
 
-            // Find eligible sample showtimes (fallback: 1 seat, 1 sample)
+            // fallback: 1 seat, 1 sample
             const sampleShowtimes = await getSampleShowtimesWithReservedSeats({ seatQuantity: requiredSeatQuant, sampleSize: 2 });
 
             test.skip(sampleShowtimes.length === 0, 'Test skipped: No showtimes with reserved seats found.');
@@ -51,9 +51,9 @@ test.describe('Seat Selectability Verification', () => {
 
     test('Available Seats can be Selected and Deselected @regression', async () => {
 
-        await test.step(`Find sample showtimes with available seats`, async () => {
+        await test.step(`Find sample showtimes with available seats to run tests`, async () => {
 
-            // Find eligible sample showtimes (fallback: 1 seat, 1 sample)
+            // fallback: 1 seat, 1 sample
             const sampleShowtimes = await getSampleShowtimesWithAvailableSeats({ seatQuantity: requiredSeatQuant, sampleSize: 2 });
 
             test.skip(sampleShowtimes.length === 0, 'Test skipped: No showtimes with available seats found.');
@@ -98,9 +98,9 @@ test.describe('Seat Selectability Verification', () => {
 
         test('Standard and VIP seats can be combined in selection', async () => {
 
-            await test.step(`Find sample showtimes with mixed seat types available`, async () => {
+            await test.step(`Find sample showtimes with mixed seat types available to run test`, async () => {
 
-                // Find eligible sample showtimes (fallback: 1 seat, 1 sample)
+                // fallback: 1 seat, 1 sample
                 const sampleShowtimes = await getSampleShowtimesWithAvailableMixedSeats({ seatQuantity: requiredSeatQuant, sampleSize: 2 });
 
                 test.skip(sampleShowtimes.length === 0, 'Test skipped: No showtimes with mixed seat types found.');

@@ -60,7 +60,6 @@ test.describe('Movie Carousel Functional Tests', () => {
                     await homePage.featuredMoviesCarousel.playTrailerVideo(movieIndex);
                     await homePage.featuredMoviesCarousel.verifyVideoDisplays();
                     await homePage.featuredMoviesCarousel.closeVideo();
-
                 }
             }
         })

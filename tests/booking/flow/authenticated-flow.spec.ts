@@ -11,7 +11,7 @@ test.describe('Ticket Booking Functionality Tests (Logged-in User)', () => {
     let numSeatsChecked: number;
 
     test.beforeEach(async ({ page, loginPage }) => {
-        // instead of using fixture to avoid potential errors when run parallel tests
+        // Use a different test user instead of using fixture to avoid potential errors when running parallel tests
         const user = userBooking[2];
 
         await loginPage.navigateToLoginPage();
@@ -24,51 +24,62 @@ test.describe('Ticket Booking Functionality Tests (Logged-in User)', () => {
 
     test('Successful Seats Booking @smoke @regression', async ({ page }) => {
 
-        const sampleShowtimes = await getSampleShowtimesWithAvailableSeats({ seatQuantity: numSeatsChecked });
-        test.skip(sampleShowtimes.length === 0, 'Test skipped: No showtimes with available seats found.');
-        const sampleShowtimeIds = sampleShowtimes.map(showtime => showtime.maLichChieu.toString());
+        let sampleShowtimeIds: string[] = [];
+        let showtimePageURL: string;
+        let seatsToBook: string[] = [];
+
+        await test.step('Find sample showtimes with available seats to run test', async () => {
+            const sampleShowtimes = await getSampleShowtimesWithAvailableSeats({ seatQuantity: numSeatsChecked });
+            
+            test.skip(sampleShowtimes.length === 0, 'Test skipped: No showtimes with available seats found.');
+            
+            sampleShowtimeIds = sampleShowtimes.map(showtime => showtime.maLichChieu.toString());
+        });
 
         for (const showtime of sampleShowtimeIds) {
 
-            await test.step(`Book seats for showtime ${showtime}`, async () => {
-                // Pick random available seats (default 2)
+            await test.step(`Find and book sample available seats for showtime ${showtime}`, async () => {
                 const availableSeats = await getAvailableSeats(showtime);
-                const seatsToBook = getRandomSeatNumbersPreferConsecutive(availableSeats);
+                seatsToBook = getRandomSeatNumbersPreferConsecutive(availableSeats);
 
-                // Go to showtime page and attempt to book seats
-                const showtimePageURL = await showtimePage.navigateToShowtimePageAndWait(showtime);
+                showtimePageURL = await showtimePage.navigateToShowtimePageAndWait(showtime);
                 await showtimePage.selectNonSelectedSeats(seatsToBook);
                 await showtimePage.clickBookTickets();
+            });
 
-                // Verify success message
+            await test.step('Verify success message and seats become unavailable on showtime page', async () => {
                 await showtimePage.verifySuccessAlert();
                 await showtimePage.exitSuccessAlert();
 
-                // Navigate back to showtime page if needed & Verify booked seats are now unavailable (unselectable)
                 if (page.url() !== showtimePageURL) {
                     await showtimePage.navigateToShowtimePageAndWait(showtime);
+                } else {
+                    await page.reload();
                 }
 
                 await showtimePage.verifySeatSelectability(seatsToBook, false);
             });
+
         }
     })
 
     test('Invalid Ticket Booking due to Empty Selection', async ({ }) => {
 
-        const sampleShowtimes = await getSampleShowtimesWithAvailableSeats({ seatQuantity: numSeatsChecked });
-        const sampleShowtimeIds = sampleShowtimes.map(showtime => showtime.maLichChieu.toString());
+        let sampleShowtimeIds: string[] = [];
+        await test.step('Find sample showtimes with available seats to run test', async () => {
+            const sampleShowtimes = await getSampleShowtimesWithAvailableSeats({ seatQuantity: numSeatsChecked });
+            sampleShowtimeIds = sampleShowtimes.map(showtime => showtime.maLichChieu.toString());
+        });
 
         for (const showtime of sampleShowtimeIds) {
 
-            await showtimePage.navigateToShowtimePageAndWait(showtime);
-            await showtimePage.clickBookTickets();
+            await test.step(`Click booking with no seats selected and verify alert for showtime: ${showtime}`, async () => {
+                await showtimePage.navigateToShowtimePageAndWait(showtime);
+                await showtimePage.clickBookTickets();
 
-            // Verify error alert
-            await showtimePage.verifyEmptySelectionAlert();
-            await showtimePage.exitEmptySelectionAlert();
+                await showtimePage.verifyEmptySelectionAlert();
+                await showtimePage.exitEmptySelectionAlert();
+            });
         }
     })
-
 });
-

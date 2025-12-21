@@ -1,3 +1,4 @@
+import { Locator } from "@playwright/test";
 import { expect, test } from "../../fixtures/custom-fixtures";
 import { pickSampleItems, shuffleItems } from "../utils/shared.helpers";
 
@@ -14,39 +15,46 @@ test.describe('Cinema Screenings Table Functional Test', () => {
 
             const firstCinema = homePage.cinemaShowtimesTabs.cinemaTabs.first();
             await firstCinema.waitFor();
-            const isSelected = await homePage.cinemaShowtimesTabs.isTabSelected(firstCinema);
 
             // Assertion: First Cinema Tab is selected by default
+            const isSelected = await homePage.cinemaShowtimesTabs.isTabSelected(firstCinema);
             expect(isSelected, 'First Cinema Tab is not selected by default').toBe(true);
         });
 
         test('Default Branch Tab auto-selects first branch & screenings populated', async ({ homePage }) => {
 
-            // Shuffle list of cinemas for iterations
-            const cinemas = await homePage.cinemaShowtimesTabs.cinemaTabs.all();
-            const shuffledCinemas = shuffleItems(cinemas);
+            let shuffledCinemas: Locator[];
 
-            for (const cinema of shuffledCinemas) {
+            await test.step(`Get all displayed cinema tabs and shuffle to run test in random order`, async () => {
+                // Shuffle list of cinemas for iterations
+                const cinemas = await homePage.cinemaShowtimesTabs.cinemaTabs.all();
+                shuffledCinemas = shuffleItems(cinemas);
+            });
 
-                // Select cinema if not already selected 
-                await homePage.cinemaShowtimesTabs.selectCinemaAndWaitBranchTablistUpdated(cinema);
+            await test.step(`Verify first branch tab is auto-selected and screenings populated for each cinema`, async () => {
 
-                // Get first branch selected state and count of movies & screenings
-                const firstBranch = homePage.cinemaShowtimesTabs.branchTabs.first();
-                const isSelected = await homePage.cinemaShowtimesTabs.isTabSelected(firstBranch);
+                for (const cinema of shuffledCinemas) {
 
-                const [movieCount, screeningCount] = await Promise.all([
-                    homePage.cinemaShowtimesTabs.countMovies(),
-                    homePage.cinemaShowtimesTabs.countShowtimes(),
-                ]);
+                    // Select cinema if not already selected 
+                    await homePage.cinemaShowtimesTabs.selectCinemaAndWaitBranchTablistUpdated(cinema);
 
-                // Assertion: First Branch Tab is selected by default
-                expect.soft(isSelected, `First branch tab is not selected by default in cinema ${cinema}`).toBe(true);
+                    // Get first branch selected state and count of movies & screenings
+                    const firstBranch = homePage.cinemaShowtimesTabs.branchTabs.first();
+                    const isSelected = await homePage.cinemaShowtimesTabs.isTabSelected(firstBranch);
 
-                // Assertion: Movie Screenings Tab is populated
-                expect.soft(movieCount, 'No movies displayed!').toBeGreaterThan(0);
-                expect.soft(screeningCount, 'No screenings displayed!').toBeGreaterThan(0);
-            }
+                    const [movieCount, screeningCount] = await Promise.all([
+                        homePage.cinemaShowtimesTabs.countMovies(),
+                        homePage.cinemaShowtimesTabs.countShowtimes(),
+                    ]);
+
+                    // Assertion: First Branch Tab is selected by default
+                    expect.soft(isSelected, `First branch tab is not selected by default in cinema ${cinema}`).toBe(true);
+
+                    // Assertion: Movie Screenings Tab is populated
+                    expect.soft(movieCount, 'No movies displayed!').toBeGreaterThan(0);
+                    expect.soft(screeningCount, 'No screenings displayed!').toBeGreaterThan(0);
+                }
+            });
         });
     });
 
@@ -54,29 +62,36 @@ test.describe('Cinema Screenings Table Functional Test', () => {
 
         test('Switching branch updates Movie Screening Tab @regression', async ({ homePage }) => {
 
-            const currentCinemas = await homePage.cinemaShowtimesTabs.cinemaTabs.all();
+            let shuffledSampleCinemas: Locator[];
 
-            /// Pick sample cinemas (first, last, random)
-            const sampleCinemas = pickSampleItems(currentCinemas);
-            const shuffledSampleCinemas = shuffleItems(sampleCinemas);
+            await test.step(`Pick sample cinemas from available cinemas to run tests`, async () => {
+                const currentCinemas = await homePage.cinemaShowtimesTabs.cinemaTabs.all();
 
-            for (const cinema of shuffledSampleCinemas) {
+                /// Pick sample cinemas (first, last, random)
+                const sampleCinemas = pickSampleItems(currentCinemas);
+                shuffledSampleCinemas = shuffleItems(sampleCinemas);
+            });
 
-                // Select cinema if different
-                await homePage.cinemaShowtimesTabs.selectCinemaAndWaitBranchTablistUpdated(cinema);
+            await test.step(`Switch branch tabs and verify screenings update`, async () => {
 
-                // Pick sample branches from unselected ones (first, last, random) 
-                const currentNonSelectedBranches = await homePage.cinemaShowtimesTabs.branchNonActiveTabs.all();
-                
-                if (currentNonSelectedBranches.length === 0) continue;
+                for (const cinema of shuffledSampleCinemas) {
 
-                const sampleBranches = pickSampleItems(currentNonSelectedBranches);
+                    // Select cinema if different
+                    await homePage.cinemaShowtimesTabs.selectCinemaAndWaitBranchTablistUpdated(cinema);
 
-                // Switch branch and verify screening list update
-                for (const branch of sampleBranches) {
-                    await homePage.cinemaShowtimesTabs.selectBranchAndWaitShowtimesUpdated(branch);
+                    // Pick sample branches from unselected ones (first, last, random) 
+                    const currentNonSelectedBranches = await homePage.cinemaShowtimesTabs.branchNonActiveTabs.all();
+
+                    if (currentNonSelectedBranches.length === 0) continue;
+
+                    const sampleBranches = pickSampleItems(currentNonSelectedBranches);
+
+                    // Switch branch and verify screening list update
+                    for (const branch of sampleBranches) {
+                        await homePage.cinemaShowtimesTabs.selectBranchAndWaitShowtimesUpdated(branch);
+                    }
                 }
-            }
+            });
         });
     })
 
@@ -85,36 +100,41 @@ test.describe('Cinema Screenings Table Functional Test', () => {
 
             test.setTimeout(200000);
 
-            const currentCinemas = await homePage.cinemaShowtimesTabs.cinemaTabs.all();
+            let shuffledSampleCinemas: Locator[];
 
-            /// Pick sample cinemas (first, last, random)
-            const sampleCinemas = pickSampleItems(currentCinemas);
-            const shuffledSampleCinemas = shuffleItems(sampleCinemas);
+            await test.step(`Pick sample cinemas from available cinemas to run tests`, async () => {
+                const currentCinemas = await homePage.cinemaShowtimesTabs.cinemaTabs.all();
 
-            for (const cinema of shuffledSampleCinemas) {
+                /// Pick sample cinemas (first, last, random)
+                const sampleCinemas = pickSampleItems(currentCinemas);
+                shuffledSampleCinemas = shuffleItems(sampleCinemas);
+            });
 
-                // Select cinema if not already selected
-                await homePage.cinemaShowtimesTabs.selectCinemaAndWaitBranchTablistUpdated(cinema);
+            await test.step(`Select random screening and verify navigation to correct ticket page`, async () => {
+                for (const cinema of shuffledSampleCinemas) {
 
-                // Pick sample branches from current list 
-                const currentBranches = await homePage.cinemaShowtimesTabs.branchTabs.all();
-                const sampleBranches = pickSampleItems(currentBranches);
+                    // Select cinema if not already selected
+                    await homePage.cinemaShowtimesTabs.selectCinemaAndWaitBranchTablistUpdated(cinema);
 
-                for (const branch of sampleBranches) {
-                    ;
-                    // Switch branch & select random screening
-                    await homePage.cinemaShowtimesTabs.selectBranchAndWaitShowtimesUpdated(branch);
+                    // Pick sample branches from current list 
+                    const currentBranches = await homePage.cinemaShowtimesTabs.branchTabs.all();
+                    const sampleBranches = pickSampleItems(currentBranches);
 
-                    const selectedShowtime = await homePage.cinemaShowtimesTabs.selectRandomShowtime();
+                    for (const branch of sampleBranches) {
+                        ;
+                        // Switch branch & select random screening
+                        await homePage.cinemaShowtimesTabs.selectBranchAndWaitShowtimesUpdated(branch);
 
-                    // Verify navigation to correct ticket page
-                    await homePage.cinemaShowtimesTabs.verifyNavigationToShowtimePage(selectedShowtime);
+                        const selectedShowtime = await homePage.cinemaShowtimesTabs.selectRandomShowtime();
 
-                    // Navigate back to Homepage & Re-select the parent cinema for next inner loop 
-                    await homePage.cinemaShowtimesTabs.goBackAndReselectParentCinema(cinema);
+                        // Verify navigation to correct ticket page
+                        await homePage.cinemaShowtimesTabs.verifyNavigationToShowtimePage(selectedShowtime);
 
+                        // Navigate back to Homepage & Re-select the parent cinema for next inner loop 
+                        await homePage.cinemaShowtimesTabs.goBackAndReselectParentCinema(cinema);
+                    }
                 }
-            }
+            });
         });
     })
 
