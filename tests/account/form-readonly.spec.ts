@@ -37,7 +37,7 @@ test.describe('Read-Only User Account Fields', () => {
 
             originalUsername = uiUserInfo.taiKhoan;
             originalUserType = uiUserInfo.maLoaiNguoiDung;
-            newUsername = (await generateValidRegisterData()).taiKhoan;
+            newUsername = generateValidRegisterData().taiKhoan;
         });
 
         await test.step('Verify user cannot switch user type (to Admin)', async () => {

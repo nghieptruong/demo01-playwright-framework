@@ -1,4 +1,3 @@
-import { M } from '@faker-js/faker/dist/airline-DF6RqYmq';
 import { fetchMoviesList, fetchShowtimesByMovieId } from './movies.api';
 import { BranchInfoByMovie, Movie, MovieShowtimesGroupedByCinema } from './movies.types';
 

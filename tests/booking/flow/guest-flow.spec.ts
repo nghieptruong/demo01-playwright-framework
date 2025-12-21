@@ -13,7 +13,7 @@ test.describe('Unauthenticated Booking Restrictions', () => {
         showtimePage = new ShowtimePage(page);
 
         // Pick sample showtimes (default: 2) with many available seats to minimize sold-out risk (fallback to any available ones)
-        requiredSeatQuant = await pickRandomNumberBetween(6, 10);
+        requiredSeatQuant = pickRandomNumberBetween(6, 10);
         const sampleShowtimes = await getSampleShowtimesWithAvailableSeats({ seatQuantity: requiredSeatQuant });
         test.skip(sampleShowtimes.length === 0, 'Test skipped: No showtimes with available seats found.');
 

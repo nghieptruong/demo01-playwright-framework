@@ -9,7 +9,7 @@ let requiredSeatsMin: number;
 
 test.beforeEach(async ({ page }) => {
     showtimePage = new ShowtimePage(page);
-    requiredSeatsMin = await pickRandomNumberBetween(1, 8);
+    requiredSeatsMin = pickRandomNumberBetween(1, 8);
 });
 
 test.describe('Seat Preview Dynamic Behavior', () => {
@@ -100,9 +100,6 @@ test.describe('Price Preview Dynamic Behavior', () => {
             await expect.poll(() => showtimePage.getPreviewPrice(), {
                 message: `Price did not update correctly after unselecting seats. Expected price: ${expectedLowerPrice}`,
             }).toEqual(expectedLowerPrice);
-
         }
-
     })
-
 })

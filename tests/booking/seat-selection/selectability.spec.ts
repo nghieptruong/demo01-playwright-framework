@@ -12,7 +12,7 @@ test.beforeEach(async ({ page }) => {
 
     showtimePage = new ShowtimePage(page);
     // Randomize the required seat quantity between 4 to 8
-    requiredSeatQuant = await pickRandomNumberBetween(4, 8);
+    requiredSeatQuant = pickRandomNumberBetween(4, 8);
 
 });
 

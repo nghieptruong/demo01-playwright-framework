@@ -1,4 +1,3 @@
-import { L } from '@faker-js/faker/dist/airline-DF6RqYmq';
 import { BranchBase, MovieBase } from '../shared.types';
 import { fetchCinemasList, fetchShowtimeDataByCinemaId } from './cinemas.api';
 import { Cinema, DanhSachPhim, ListCumRap, MovieAndShowtimeIds, ShowtimesByCinema } from './cinemas.types';

@@ -8,8 +8,8 @@ test.describe('E2E: Complete Authentication Flow', () => {
 
     test('Register → Login → Update Profile → Logout → Login Again', async ({ page, registerPage, loginPage }) => {
 
-        const { taiKhoan, matKhau, confirmPassWord, hoTen, email } = await generateValidRegisterData();
-        const differentName = await generateDifferentName(hoTen);
+        const { taiKhoan, matKhau, confirmPassWord, hoTen, email } = generateValidRegisterData();
+        const differentName = generateDifferentName(hoTen);
         const accountPage = new AccountPage(page);
 
         await test.step('Register new user account', async () => {
@@ -86,7 +86,7 @@ test.describe('E2E: Complete Authentication Flow', () => {
 
     test('Register → Login → Change Password → Logout → Login with New Password', async ({ page, registerPage, loginPage }) => {
 
-        const { taiKhoan, matKhau, confirmPassWord, hoTen, email } = await generateValidRegisterData();
+        const { taiKhoan, matKhau, confirmPassWord, hoTen, email } = generateValidRegisterData();
         const newPassword = generateDifferentPassword(matKhau);
         const accountPage = new AccountPage(page);
 

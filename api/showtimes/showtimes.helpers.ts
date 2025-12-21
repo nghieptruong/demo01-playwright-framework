@@ -11,19 +11,20 @@ export async function extractSeatingData(showtimeId: string): Promise<SeatInfo[]
     const showtimeDetails = await fetchShowtimeDetailsByShowtimeId(showtimeId);
     return showtimeDetails.danhSachGhe;
 }
-async function getSeatInfoFromApi(showtimeId: string, seatNumber: string) {
-    const seatingData = await extractSeatingData(showtimeId);
 
-    const seat = seatingData.find(
-        s => s.tenGhe === seatNumber
-    );
+// async function getSeatInfoFromApi(showtimeId: string, seatNumber: string) {
+//     const seatingData = await extractSeatingData(showtimeId);
 
-    if (!seat) {
-        throw new Error(`Cannot find seat ${seatNumber} for showtime ${showtimeId}`);
-    }
+//     const seat = seatingData.find(
+//         s => s.tenGhe === seatNumber
+//     );
 
-    return seat;
-}
+//     if (!seat) {
+//         throw new Error(`Cannot find seat ${seatNumber} for showtime ${showtimeId}`);
+//     }
+
+//     return seat;
+// }
 
 export async function getAvailableSeats(showtimeId: string): Promise<string[]> {
     const data = await extractSeatingData(showtimeId);

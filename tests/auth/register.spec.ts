@@ -3,11 +3,9 @@ import { expect, test } from "../../fixtures/custom-fixtures";
 import { registerFormValidationRules } from "../utils/FormValidationRules";
 import { generateTooShortPassword, generateValidRegisterData } from "../utils/auth.testDataGenerator";
 
-
 test.beforeEach(async ({ registerPage }) => {
     await registerPage.navigateToRegisterPage();
 });
-
 
 test.describe('Register Functional Test', () => {
 
