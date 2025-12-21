@@ -24,8 +24,8 @@ export class VerticalTabsHome extends VerticalTabsBase {
       // ========== Wait Methods ==========
       async waitForTabsLoaded() {
             await this.waitForElementVisible(this.cinemaTabs.first());
-            await this.waitForElementVisible(this.branchTabs.first());
-            await this.waitForElementVisible(this.lnkShowtimes.first());
+            await this.cinemaTabs.first().scrollIntoViewIfNeeded();
+            await this.page.waitForTimeout(500);  // wait for any tab animation to complete
       }
 
       // ========== Locators ==========

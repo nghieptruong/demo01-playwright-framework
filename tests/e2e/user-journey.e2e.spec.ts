@@ -10,7 +10,7 @@ import { HomePage } from "../../pages/HomePage";
 import { LoginPage } from "../../pages/LoginPage";
 import { userE2EJourney } from "../test-data/testUsers";
 
-test.setTimeout(120000); 
+test.setTimeout(120000);
 
 test.describe('E2E: User Journey - Discovery & Browsing', () => {
 
@@ -184,9 +184,11 @@ test.describe('E2E: User Journey - Discovery & Browsing', () => {
 
     });
 
-    test('Location-First User: Browse Cinema Tabs → Browse Locations → Select Showtime → Book', async ({ page, loggedInHomepage }) => {
+    test('Location-First User: Browse Cinema Tabs → Browse Locations → Select Showtime → Book', async ({ page }) => {
 
-        const homePage = loggedInHomepage.homePage;
+        const homePage = new HomePage(page);
+
+        const user = userE2EJourney[2];
 
         let sampleShowtime: ShowtimeInfo;
         let sampleShowtimeIdString: string;
@@ -215,17 +217,24 @@ test.describe('E2E: User Journey - Discovery & Browsing', () => {
             sampleMovieId = await findMovieIdByShowtimeId(sampleShowtime.maLichChieu.toString());
         });
 
-        await test.step('Wait for cinema tabs on Homepage to load', async () => {
+        await test.step('Login to test user account', async () => {
+
+            const loginPage = new LoginPage(page);
+            await loginPage.navigateToLoginPage();
+
+            await loginPage.fillLoginFormAndSubmit(user.taiKhoan, user.matKhau);
+            await loginPage.verifySuccessMsgAndLoggedInStatus();
+        });
+
+        await test.step('Navigate to Homepage and Wait for cinema tabs to load', async () => {
             await homePage.navigateToHomePageAndWait();
             await homePage.cinemaShowtimesTabs.waitForTabsLoaded();
         });
 
         await test.step('Select cinema, branch and click on showtime link', async () => {
-
             await homePage.cinemaShowtimesTabs.selectCinemaByAliasAndVerifyBranchesUpdated(sampleCinemaAlias);
             await homePage.cinemaShowtimesTabs.selectBranchByNameAndVerifyShowtimesUpdated(sampleShowtime.tenCumRap);
             await homePage.cinemaShowtimesTabs.selectShowtimeById(sampleShowtimeIdString);
-
         });
 
         await test.step('Verify navigate to showtime booking page', async () => {

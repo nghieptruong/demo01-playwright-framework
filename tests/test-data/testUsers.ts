@@ -44,11 +44,15 @@ export const userE2EJourney: LoginFormData[] = [
         taiKhoan: 'sweden',
         matKhau: 'Sweden1!',
     },
-
     {
         taiKhoan: 'thailand',
         matKhau: 'Thailand1!',
     },
+    {
+        taiKhoan: 'vietnam',
+        matKhau: 'Vietnam1!',
+    },
+
 ];
 
 
