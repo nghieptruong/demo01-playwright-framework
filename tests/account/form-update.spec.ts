@@ -5,7 +5,8 @@ import { userAccountUpdate, userPrimary } from "../test-data/testUsers";
 import { generateDifferentName, generateDifferentPassword, generateDifferentPhoneNumber } from "../utils/auth.testDataGenerator";
 import { generateTooShortPassword, generateValidRegisterData } from "../utils/auth.testDataGenerator";
 
-// Run tests serially - all tests modify the same user account
+// Run tests serially to avoid issue due to all tests modifying the same user account. Cons: if one test fails, the rest will be skipped
+// (This is temporary fix - consider using separate test users or create isolated project later) 
 test.describe.configure({ mode: 'serial' });
 
 test.describe('Update User Account Functionality', () => {
