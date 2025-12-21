@@ -264,8 +264,8 @@ The workflow is configured to activate under the following conditions:
 * **Pull Request**: Any PR opened or updated against the `main` branch.
 * **Workflow Dispatch**: Manual execution via the GitHub UI for ad-hoc testing.
 
-[!IMPORTANT]
-By default only `chromium` is used for the CI run to reduce run time and prevent risk of exceeding the quota on the free Github plan.
+> [!IMPORTANT]
+> By default only `chromium` is used for the CI run to reduce run time and prevent risk of exceeding the quota on the free Github plan.
 
 ### How to Trigger Manually
 For reviewers or developers who wish to verify a specific branch or test a specific browser engine without a code commit:
@@ -280,3 +280,6 @@ For reviewers or developers who wish to verify a specific branch or test a speci
 
 > [!TIP]
 > Once the run is complete, scroll to the **Artifacts** section at the bottom of the run summary page to view the test results visually enriched by Allure in a Cloudflare-hosted web page.
+
+> [!WARNING]
+> The outcome of the CI pipeline differs from the local run, likely due to the CI pipeline being in a different region and therefore has more issue loading the website located in Vietnam.

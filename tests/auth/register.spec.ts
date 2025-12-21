@@ -1,5 +1,6 @@
 import { getSingleAccountByUsername } from "../../api/users/accounts.helpers";
 import { expect, test } from "../../fixtures/custom-fixtures";
+import { RegisterFormData } from "../types/auth.types";
 import { registerFormValidationRules } from "../utils/FormValidationRules";
 import { generateTooShortPassword, generateValidRegisterData } from "../utils/auth.testDataGenerator";
 
@@ -13,78 +14,100 @@ test.describe('Register Functional Test', () => {
 
         test('Successful registration with valid inputs @smoke @regression', async ({ registerPage, loginPage }) => {
 
-            // Generate random valid inputs and submmit register form
-            const { taiKhoan, matKhau, confirmPassWord, hoTen, email } = generateValidRegisterData();
+            let data: RegisterFormData;
 
-            await registerPage.fillFormAndSubmit(
-                taiKhoan,
-                matKhau,
-                confirmPassWord,
-                hoTen,
-                email
-            );
+            await test.step('Generate and fill registration form with valid data and submit', async () => {
+                data = generateValidRegisterData();
 
-            // Assertion 1: success message
-            await registerPage.verifyRegisterSuccessMsg();
+                await registerPage.fillFormAndSubmit(
+                    data.taiKhoan,
+                    data.matKhau,
+                    data.confirmPassWord,
+                    data.hoTen,
+                    data.email
+                );
 
-            // Assertion 2: User can login with registered credentials
-            await loginPage.navigateToLoginPage();
-            await loginPage.fillLoginFormAndSubmit(taiKhoan, matKhau);
-            await loginPage.verifySuccessMsgAndLoggedInStatus();
+            });
 
-            // Assertion 3: Registered user data is correct in backend
-            const apiAccount = await getSingleAccountByUsername(taiKhoan);
+            await test.step('Verify registration success', async () => {
+                await registerPage.verifyRegisterSuccessMsg();
+            });
 
-            expect.soft(apiAccount.taiKhoan, 'Incorrect username').toBe(taiKhoan);
-            expect.soft(apiAccount.hoTen, 'Incorrect fullName').toBe(hoTen);
-            expect.soft(apiAccount.email, 'Incorrect email.').toBe(email);
+            await test.step('Verify user can login with registered credentials and backend data is correct', async () => {
+                await loginPage.navigateToLoginPage();
+                await loginPage.fillLoginFormAndSubmit(data.taiKhoan, data.matKhau);
+                await loginPage.verifySuccessMsgAndLoggedInStatus();
+            });
 
+            await test.step('Verify backend account data matches registered data', async () => {
+                const apiAccount = await getSingleAccountByUsername(data.taiKhoan);
+
+                expect.soft(apiAccount.taiKhoan, 'Incorrect username').toBe(data.taiKhoan);
+                expect.soft(apiAccount.hoTen, 'Incorrect fullName').toBe(data.hoTen);
+                expect.soft(apiAccount.email, 'Incorrect email.').toBe(data.email);
+            });
         });
-
     });
 
     test.describe('Invalid Registration', () => {
 
         test.describe('Due to Field validation error', () => {
 
+            let data: RegisterFormData;
             test('Blank name field blocks submission', async ({ registerPage, loginPage }) => {
 
-                // Generate and submit input with blank name field
-                const { taiKhoan, matKhau, confirmPassWord, email } = generateValidRegisterData();
-                await registerPage.fillFormAndSubmit(taiKhoan, matKhau, confirmPassWord, '', email);
+                await test.step('Generate and submit register data with blank name field', async () => {
+                    data = generateValidRegisterData();
 
-                // Attempt to login with the registered credentials 
-                await loginPage.navigateToLoginPage();
-                await loginPage.fillLoginFormAndSubmit(taiKhoan, matKhau);
+                    await registerPage.fillFormAndSubmit(
+                        data.taiKhoan,
+                        data.matKhau,
+                        data.confirmPassWord,
+                        '',
+                        data.email
+                    );
+                });
 
-                // Assertion: Invalid credential alert visible and user remains in guest mode
-                await loginPage.verifyInvalidCredentialAlert();
-                await loginPage.topBarNavigation.verifyNonLoggedInStatus();
+                await test.step('Attempt to login with the registered credentials', async () => {
+                    await loginPage.navigateToLoginPage();
+                    await loginPage.fillLoginFormAndSubmit(data.taiKhoan, data.matKhau);
+                });
+
+                await test.step('Verify submission is blocked due to blank name field', async () => {
+                    await loginPage.verifyInvalidCredentialAlert();
+                    await loginPage.topBarNavigation.verifyNonLoggedInStatus();
+                });
 
             });
 
             test('Short password blocks submisson', async ({ registerPage, loginPage }) => {
 
-                // Test case: short password
-                // Generate and submit input with invalid short password
-                const { taiKhoan, hoTen, email } = generateValidRegisterData();
-                const shortPassword = generateTooShortPassword();
+                let data: RegisterFormData;
+                let shortPassword: string;
 
-                await registerPage.fillFormAndSubmit(
-                    taiKhoan,
-                    shortPassword,
-                    shortPassword,
-                    hoTen,
-                    email
-                );
+                await test.step('Generate and submit register data with short password', async () => {
 
-                // Attempt to login with the registered credentials and verify failed login
-                await loginPage.navigateToLoginPage();
-                await loginPage.fillLoginFormAndSubmit(taiKhoan, shortPassword);
+                    data = generateValidRegisterData();
+                    shortPassword = generateTooShortPassword();
 
-                await loginPage.verifyInvalidCredentialAlert();
-                await loginPage.topBarNavigation.verifyNonLoggedInStatus();
+                    await registerPage.fillFormAndSubmit(
+                        data.taiKhoan,
+                        shortPassword,
+                        shortPassword,
+                        data.hoTen,
+                        data.email
+                    );
+                });
 
+                await test.step('Attempt to login with the registered credentials', async () => {
+                    await loginPage.navigateToLoginPage();
+                    await loginPage.fillLoginFormAndSubmit(data.taiKhoan, shortPassword);
+                });
+
+                await test.step('Verify submission is blocked due to short password', async () => {
+                    await loginPage.verifyInvalidCredentialAlert();
+                    await loginPage.topBarNavigation.verifyNonLoggedInStatus();
+                });
             });
 
         });
@@ -98,18 +121,33 @@ test.describe('Register Functional Test', () => {
 
                 test(`Password Mismatch: ${testCase.case}`, async ({ registerPage, loginPage }) => {
 
-                    const { taiKhoan, matKhau, confirmPassWord, hoTen, email } = testCase.input;
-                    await registerPage.fillFormAndSubmit(taiKhoan, matKhau, confirmPassWord, hoTen, email);
+                    let data: RegisterFormData;
 
-                    // Verify submission blocked
-                    await registerPage.verifyMismatchedPasswordErrorMsg(testCase.expectedError);
+                    await test.step('Fill registration form with mismatched passwords and submit', async () => {
+                        data = testCase.input;
 
-                    // Cannot login with the registered credentials
-                    await loginPage.navigateToLoginPage();
-                    await loginPage.fillLoginFormAndSubmit(taiKhoan, matKhau);
+                        await registerPage.fillFormAndSubmit(
+                            data.taiKhoan,
+                            data.matKhau,
+                            data.confirmPassWord,
+                            data.hoTen,
+                            data.email
+                        );
+                    });
 
-                    await loginPage.verifyInvalidCredentialAlert();
-                    await loginPage.topBarNavigation.verifyNonLoggedInStatus();
+                    await test.step('Verify error message', async () => {
+                        await registerPage.verifyMismatchedPasswordErrorMsg(testCase.expectedError);
+
+                    });
+
+                    await test.step('Verify failed registered credentials', async () => {
+                        // Cannot login with the registered credentials
+                        await loginPage.navigateToLoginPage();
+                        await loginPage.fillLoginFormAndSubmit(data.taiKhoan, data.matKhau);
+
+                        await loginPage.verifyInvalidCredentialAlert();
+                        await loginPage.topBarNavigation.verifyNonLoggedInStatus();
+                    });
                 });
             }
 
@@ -126,18 +164,31 @@ test.describe('Register Functional Test', () => {
 
                     test(`Uniqueness Error: ${testCase.case} @regression`, async ({ registerPage, loginPage }) => {
 
-                        const { taiKhoan, matKhau, confirmPassWord, hoTen, email } = testCase.input;
-                        await registerPage.fillFormAndSubmit(taiKhoan, matKhau, confirmPassWord, hoTen, email);
+                        let data: RegisterFormData;
 
-                        // Verify submission blocked
-                        await registerPage.verifyUniquenessErrorMsg(testCase.expectedError);
+                        await test.step('Fill registration form with mismatched passwords and submit', async () => {
+                            data = testCase.input;
 
-                        // Cannot login with the registered credentials
-                        await loginPage.navigateToLoginPage();
-                        await loginPage.fillLoginFormAndSubmit(taiKhoan, matKhau);
+                            await registerPage.fillFormAndSubmit(
+                                data.taiKhoan,
+                                data.matKhau,
+                                data.confirmPassWord,
+                                data.hoTen,
+                                data.email
+                            );
+                        });
 
-                        await loginPage.verifyInvalidCredentialAlert();
-                        await loginPage.topBarNavigation.verifyNonLoggedInStatus();
+                        await test.step('Verify error message', async () => {
+                            await registerPage.verifyUniquenessErrorMsg(testCase.expectedError);
+                        });
+
+                        await test.step('Verify failed registered credentials', async () => {
+                            await loginPage.navigateToLoginPage();
+                            await loginPage.fillLoginFormAndSubmit(data.taiKhoan, data.matKhau);
+
+                            await loginPage.verifyInvalidCredentialAlert();
+                            await loginPage.topBarNavigation.verifyNonLoggedInStatus();
+                        });
                     });
                 }
             }

@@ -7,7 +7,6 @@ test.describe('Account Form UI Tests', () => {
 
     test.beforeEach(async ({ loggedInHomepage }) => {
 
-        // Make sure user is logged in and on account page before each test
         accountPage = new AccountPage(loggedInHomepage.homePage.page);
 
         await accountPage.navigateToAccountPage();
@@ -19,35 +18,42 @@ test.describe('Account Form UI Tests', () => {
 
         test('Default state: hidden', async () => {
 
-            // Initial state: password should be hidden
-            const isVisible = await accountPage.isPasswordVisible();
-
-            expect(isVisible,
-                'Initial password visibility state incorrect. Expected hidden (false).'
-            ).toBe(false);
+            await test.step('Verify password field is hidden by default', async () => {
+                const isVisible = await accountPage.isPasswordVisible();
+                expect(isVisible,
+                    'Initial password visibility state incorrect. Expected hidden (false).'
+                ).toBe(false);
+            });
 
         });
 
         test('Click toggle icon to switch visibility state', async () => {
 
-            // Toggle visibility: password should change state
+            let initialVisibility: boolean;
 
-            const initialState = await accountPage.isPasswordVisible();
-            await accountPage.togglePasswordVisibility();
+            await test.step('Click visibility toggle and verify state changes accordingly', async () => {
 
-            const switchedState = await accountPage.isPasswordVisible();
+                initialVisibility = await accountPage.isPasswordVisible();
 
-            expect(switchedState,
-                'Password visibility state did not change after toggle.'
-            ).toBe(!initialState);
+                await accountPage.togglePasswordVisibility();
+                const switchedState = await accountPage.isPasswordVisible();
 
-            // Toggle visibility again: password should revert to initial state
-            await accountPage.togglePasswordVisibility();
+                expect(switchedState,
+                    'Password visibility state did not change after toggle.'
+                ).toBe(!initialVisibility);
 
-            const revertedState = await accountPage.isPasswordVisible();
-            expect(revertedState,
-                'Password visibility state did not revert after second toggle.'
-            ).toBe(initialState);
+            });
+
+            await test.step('Toggle visibility again to revert to initial state', async () => {
+
+                await accountPage.togglePasswordVisibility();
+                const revertedState = await accountPage.isPasswordVisible();
+
+                expect(revertedState,
+                    'Password visibility state did not revert after second toggle.'
+                ).toBe(initialVisibility);
+
+            });
 
         });
     });

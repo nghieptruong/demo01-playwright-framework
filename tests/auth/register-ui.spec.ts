@@ -10,36 +10,39 @@ test.describe('Register UI Tests', () => {
 
         test('Default state: hidden', async ({ registerPage }) => {
 
-            // Initial state: password should be hidden
-            const isVisible = await registerPage.isPasswordVisible();
+            await test.step('Verify password field is hidden by default', async () => {
+                const isVisible = await registerPage.isPasswordVisible();
 
-            expect(isVisible,
-                'Initial password visibility state incorrect. Expected hidden (false).'
-            ).toBe(false);
-
+                expect(isVisible,
+                    'Initial password visibility state incorrect. Expected hidden (false).'
+                ).toBe(false);
+            });
         });
 
         test('Click toggle icon to switch visibility state', async ({ registerPage }) => {
 
-            // Toggle visibility: password should change state
+            let initialVisibility: boolean;
 
-            const initialState = await registerPage.isPasswordVisible();
-            await registerPage.togglePasswordVisibility();
+            await test.step('Click visibility toggle and verify state changes accordingly', async () => {
+                initialVisibility = await registerPage.isPasswordVisible();
+                await registerPage.togglePasswordVisibility();
 
-            const switchedState = await registerPage.isPasswordVisible();
+                const switchedState = await registerPage.isPasswordVisible();
 
-            expect(switchedState,
-                'Password visibility state did not change after toggle.'
-            ).toBe(!initialState);
+                expect(switchedState,
+                    'Password visibility state did not change after toggle.'
+                ).toBe(!initialVisibility);
 
-            // Toggle visibility again: password should revert to initial state
-            await registerPage.togglePasswordVisibility();
+            });
 
-            const revertedState = await registerPage.isPasswordVisible();
-            expect(revertedState,
-                'Password visibility state did not revert after second toggle.'
-            ).toBe(initialState);
+            await test.step('Toggle visibility again to revert to initial state', async () => {
+                await registerPage.togglePasswordVisibility();
 
+                const revertedState = await registerPage.isPasswordVisible();
+                expect(revertedState,
+                    'Password visibility state did not revert after second toggle.'
+                ).toBe(initialVisibility);
+            });
         });
     });
 
@@ -47,35 +50,37 @@ test.describe('Register UI Tests', () => {
 
         test('Default state: hidden', async ({ registerPage }) => {
 
-            // Initial state: password should be hidden
-            const isVisible = await registerPage.isConfirmPasswordVisible();
+            await test.step('Verify confirm password field is hidden by default', async () => {
+                const isVisible = await registerPage.isConfirmPasswordVisible();
 
-            expect(isVisible,
-                'Initial confirmPassWord visibility state incorrect. Expected hidden (false).'
-            ).toBe(false);
-
+                expect(isVisible,
+                    'Initial confirmPassWord visibility state incorrect. Expected hidden (false).'
+                ).toBe(false);
+            });
         });
 
         test('Click toggle icon to switch visibility state', async ({ registerPage }) => {
+            let initialVisibility: boolean;
 
-            // Toggle visibility: password should change state
-            const initialState = await registerPage.isConfirmPasswordVisible();
+            await test.step('Click visibility toggle and verify state changes accordingly', async () => {
+                initialVisibility = await registerPage.isConfirmPasswordVisible();
 
-            await registerPage.toggleConfirmPasswordVisibility();
-            const switchedState = await registerPage.isConfirmPasswordVisible();
+                await registerPage.toggleConfirmPasswordVisibility();
+                const switchedState = await registerPage.isConfirmPasswordVisible();
 
-            expect(switchedState,
-                'Password visibility state did not change after toggle.'
-            ).toBe(!initialState);
+                expect(switchedState,
+                    'Password visibility state did not change after toggle.'
+                ).toBe(!initialVisibility);
 
-            // Toggle visibility again: password should revert to initial state
-            await registerPage.toggleConfirmPasswordVisibility();
+            });
+            await test.step('Toggle visibility again to revert to initial state', async () => {
+                await registerPage.toggleConfirmPasswordVisibility();
 
-            const revertedState = await registerPage.isConfirmPasswordVisible();
-            expect(revertedState,
-                'confirmPassWord visibility state did not revert after second toggle.'
-            ).toBe(initialState);
-
+                const revertedState = await registerPage.isConfirmPasswordVisible();
+                expect(revertedState,
+                    'confirmPassWord visibility state did not revert after second toggle.'
+                ).toBe(initialVisibility);
+            });
         });
     });
 
@@ -83,41 +88,40 @@ test.describe('Register UI Tests', () => {
 
         test('Toggling password does not affect confirmPassWord', async ({ registerPage }) => {
 
-            // Get initial confirmPassWord state
-            const initialConfirmPasswordState = await registerPage.isConfirmPasswordVisible();
+            let initialConfirmPasswordState: boolean;
+            await test.step('Get initial confirmPassWord visibility and toggle password visibility', async () => {
+                initialConfirmPasswordState = await registerPage.isConfirmPasswordVisible();
 
-            // Toggle password visibility and verify confirmPassWord state unchanged
-            await registerPage.togglePasswordVisibility();
+                await registerPage.togglePasswordVisibility();
+            });
 
-            const confirmPasswordStateAfterPasswordToggle = await registerPage.isConfirmPasswordVisible();
+            await test.step('Verify confirmPassWord visibility state remains unchanged', async () => {
+                const confirmPasswordStateAfterPasswordToggle = await registerPage.isConfirmPasswordVisible();
 
-            expect(confirmPasswordStateAfterPasswordToggle,
-                `confirmPassWord visibility state changed unexpectedly when toggling password.
+                expect(confirmPasswordStateAfterPasswordToggle,
+                    `confirmPassWord visibility state changed unexpectedly when toggling password.
                 Expected visibility: ${initialConfirmPasswordState}.`
-            ).toBe(initialConfirmPasswordState);
+                ).toBe(initialConfirmPasswordState);
+            });
 
         })
 
         test('Toggling confirmPassWord does not affect password', async ({ registerPage }) => {
+            let initialPasswordState: boolean;
 
-            // Get initial password state
-            const initialPasswordState = await registerPage.isPasswordVisible();
+            await test.step('Get initial password visibility and toggle confirmPassWord visibility', async () => {
+                initialPasswordState = await registerPage.isPasswordVisible();
+                await registerPage.toggleConfirmPasswordVisibility();
+            });
 
-            // Toggle confirmPassWord visibility and verify password state unchanged
-            await registerPage.toggleConfirmPasswordVisibility();
+            await test.step('Verify password visibility state remains unchanged', async () => {
+                const passwordStateAfterConfirmPasswordToggle = await registerPage.isPasswordVisible();
 
-            const passwordStateAfterConfirmPasswordToggle = await registerPage.isPasswordVisible();
-
-            expect(passwordStateAfterConfirmPasswordToggle,
-                `Password visibility state changed unexpectedly when toggling confirmPassWord.
+                expect(passwordStateAfterConfirmPasswordToggle,
+                    `Password visibility state changed unexpectedly when toggling confirmPassWord.
                 Expected visibility: ${initialPasswordState}.`
-            ).toBe(initialPasswordState);
+                ).toBe(initialPasswordState);
+            });
         })
-
     })
-
 });
-
-
-
-

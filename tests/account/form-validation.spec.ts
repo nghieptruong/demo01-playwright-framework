@@ -28,13 +28,15 @@ test.describe('Account Form Field Validation Test', () => {
 
                 test(`${field}: ${testCase.case}`, async () => {
 
-                    await accountPage.triggerFieldValidation(field, testCase.input);
+                    await test.step(`Trigger ${field} validation with input: ${testCase.input}`, async () => {
+                        await accountPage.triggerFieldValidation(field, testCase.input);
+                    });
 
-                    // Assertion: Error message matches expected error message
-                    await accountPage.verifyFieldErrorMsg(field, testCase.expectedError);
+                    await test.step('Verify error message is displayed', async () => {
+                        await accountPage.verifyFieldErrorMsg(field, testCase.expectedError);
+                    });
                 })
             }
         })
     }
 })
-

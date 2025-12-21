@@ -23,7 +23,6 @@ test.beforeEach(async ({ page }) => {
     await accountPage.waitForUserInfoForm();
 });
 
-
 test.describe('Read-Only User Account Fields', () => {
 
     test('User cannot change readonly fields (username and user type) @regression', async ({ page, loginPage }) => {

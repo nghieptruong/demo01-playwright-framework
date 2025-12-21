@@ -20,13 +20,14 @@ test.describe('Update User Account Functionality', () => {
         loginPage = new LoginPage(page);
         accountPage = new AccountPage(page);
 
-        // Login as testUser and navigate to account page
-        await loginPage.navigateToLoginPage();
-        await loginPage.fillLoginFormAndSubmit(user.taiKhoan, user.matKhau);
-        await loginPage.verifySuccessMsgAndLoggedInStatus();
+        await test.step('Login and navigate to account page', async () => {
+            await loginPage.navigateToLoginPage();
+            await loginPage.fillLoginFormAndSubmit(user.taiKhoan, user.matKhau);
+            await loginPage.verifySuccessMsgAndLoggedInStatus();
 
-        await accountPage.navigateToAccountPage();
-        await accountPage.waitForUserInfoForm();
+            await accountPage.navigateToAccountPage();
+            await accountPage.waitForUserInfoForm();
+        });
     });
 
     test.describe('Valid Update', () => {
@@ -36,7 +37,7 @@ test.describe('Update User Account Functionality', () => {
             let originalName: string, originalEmail: string, originalPhoneNr: string;
             let newName: string, newEmail: string, newPhoneNr: string;
 
-            await test.step('Generate test data', async () => {
+            await test.step('Generate new account data to test update function', async () => {
                 const originalValues = await accountPage.extractUserDataFromForm();
                 originalName = originalValues.hoTen;
                 originalEmail = originalValues.email;
@@ -95,124 +96,129 @@ test.describe('Update User Account Functionality', () => {
 
             test.setTimeout(120000); // Extend timeout for this test to avoid timeout preventing password reset
 
-            //Get original password and generate different valid one
             const originalPassword = user.matKhau;
             const newPassword = generateDifferentPassword(originalPassword);
 
             try {
-                // Perform password update
-                await accountPage.changePassword(newPassword);
-                await accountPage.clickSaveButton();
+                await test.step('Change password verify success alert', async () => {
+                    await accountPage.changePassword(newPassword);
+                    await accountPage.clickSaveButton();
+                    await accountPage.verifyAndCloseSuccessAlert();
+                });
 
-                // Assertion 1: Success alert visible
-                await accountPage.verifyAndCloseSuccessAlert();
+                await test.step('Verify valid login with new password after logout', async () => {
+                    await accountPage.topBarNavigation.clickLogoutLink();
+                    await accountPage.topBarNavigation.confirmLogoutAndVerifySuccessMsg();
 
-                // Assertion 2: Log out and verify Successful login with new password
-                await accountPage.topBarNavigation.clickLogoutLink();
-                await accountPage.topBarNavigation.confirmLogoutAndVerifySuccessMsg();
-
-                await loginPage.navigateToLoginPage();
-                await loginPage.fillLoginFormAndSubmit(user.taiKhoan, newPassword);
-                await loginPage.topBarNavigation.verifyUserIsLoggedIn();
+                    await loginPage.navigateToLoginPage();
+                    await loginPage.fillLoginFormAndSubmit(user.taiKhoan, newPassword);
+                    await loginPage.topBarNavigation.verifyUserIsLoggedIn();
+                });
 
             } finally {
-                
-                // Always revert password to original, even if test fails
-                await accountPage.navigateToAccountPage();
-                await accountPage.waitForUserInfoForm();
-                await accountPage.changePassword(originalPassword);
-                await accountPage.clickSaveButton();
-                await accountPage.verifyAndCloseSuccessAlert();
+                await test.step('Revert password to original value', async () => {
+                    await accountPage.navigateToAccountPage();
+                    await accountPage.waitForUserInfoForm();
+                    await accountPage.changePassword(originalPassword);
+                    await accountPage.clickSaveButton();
+                    await accountPage.verifyAndCloseSuccessAlert();
+                });
             }
         })
-    })
+    });
 
     test.describe('Invalid Update', () => {
 
         test.describe('Due to Field validation error', () => {
-
+            let originalFullName: string;
             test('Blank name field blocks submsion', async ({ page }) => {
 
-                // Attempt update with blank field and verify error message
-                const originalValues = await accountPage.extractUserDataFromForm();
-                const originalFullName = originalValues.hoTen;
+                await test.step('Get original full name to compare', async () => {
+                    const originalValues = await accountPage.extractUserDataFromForm();
+                    originalFullName = originalValues.hoTen;
+                });
 
-                await accountPage.changeFullName('');
-                await accountPage.clickSaveButton();
+                await test.step('Attempt update with blank full name and submit', async () => {
+                    await accountPage.changeFullName('');
+                    await accountPage.clickSaveButton();
+                });
 
-                // Assertion: Failed update - full name remains the same
-                await page.reload();
-                await accountPage.waitForUserInfoForm();
+                await test.step('Verify full name remains unchanged after reload', async () => {
+                    await page.reload();
+                    await accountPage.waitForUserInfoForm();
 
-                const updatedUserInfo = await accountPage.extractUserDataFromForm();
+                    const updatedUserInfo = await accountPage.extractUserDataFromForm();
 
-                expect(updatedUserInfo.hoTen,
-                    `Full name should not be updated when blank value submitted.`
-                ).toBe(originalFullName);
-
+                    expect(updatedUserInfo.hoTen,
+                        `Full name should not be updated when blank value submitted.`
+                    ).toBe(originalFullName);
+                });
             });
 
             test('Short password blocks submission', async ({ page }) => {
 
-                // Test case: short password 
-                // Generate and submit invalid input per error case
-                const originalValues = await accountPage.extractUserDataFromForm();
-                const originalPassword = originalValues.matKhau;
+                let originalPassword: string;
+                let invalidPassword: string;
 
-                const invalidPassword = generateTooShortPassword();
+                await test.step('Get original password and generate a too short password', async () => {
+                    const originalValues = await accountPage.extractUserDataFromForm();
+                    originalPassword = originalValues.matKhau;
+                    invalidPassword = generateTooShortPassword();
+                });
 
-                // Attempt update with invalid value and verify error message
-                await accountPage.changePassword(invalidPassword);
-                await accountPage.clickSaveButton();
+                await test.step('Attempt update with short password and submit', async () => {
+                    await accountPage.changePassword(invalidPassword);
+                    await accountPage.clickSaveButton();
+                });
 
-                // Assertion: Failed update - cannot login with invalid password
-                await accountPage.topBarNavigation.clickLogoutLink();
-                await accountPage.topBarNavigation.confirmLogoutAndVerifySuccessMsg();
+                await test.step('Verify unsuccesful login with new password - password was not updated', async () => {
+                    await accountPage.topBarNavigation.clickLogoutLink();
+                    await accountPage.topBarNavigation.confirmLogoutAndVerifySuccessMsg();
 
-                await loginPage.navigateToLoginPage();
-                await loginPage.fillLoginFormAndSubmit(user.taiKhoan, invalidPassword);
+                    await loginPage.navigateToLoginPage();
+                    await loginPage.fillLoginFormAndSubmit(user.taiKhoan, invalidPassword);
 
-                await loginPage.verifyPasswordFieldErrorMsgVisible();
-                await loginPage.topBarNavigation.verifyNonLoggedInStatus();
+                    await loginPage.verifyPasswordFieldErrorMsgVisible();
+                    await loginPage.topBarNavigation.verifyNonLoggedInStatus();
+                });
 
-                // Assertion: Reload and verify Successful login with original password
-                await page.reload();
-                await loginPage.fillLoginFormAndSubmit(user.taiKhoan, originalPassword);
-                await loginPage.verifySuccessMsgAndLoggedInStatus();
+                await test.step('Verify valid login with original password', async () => {
+                    await page.reload();
+                    await loginPage.fillLoginFormAndSubmit(user.taiKhoan, originalPassword);
+                    await loginPage.verifySuccessMsgAndLoggedInStatus();
+                });
             });
-
         })
 
         test.describe('Due to Form validation error (Server-Side)', () => {
             test('Uniqueness Error: Existing email @regression', async ({ page }) => {
 
-                // Get different existing email from another user
-                const differentExistingEmail = userPrimary.email;
+                let originalEmail: string;
+                let differentExistingEmail: string;
 
-                // Attempt update with existing email
-                const originalValues = await accountPage.extractUserDataFromForm();
-                const originalEmail = originalValues.email;
+                await test.step('Get current email and find a different existing email to test', async () => {
+                    differentExistingEmail = userPrimary.email;
 
-                await accountPage.changeEmail(differentExistingEmail);
-                await accountPage.clickSaveButton();
+                    const originalValues = await accountPage.extractUserDataFromForm();
+                    originalEmail = originalValues.email;
+                });
 
-                // Assertion: Email remains unchanged after reload
-                await page.reload();
-                await accountPage.waitForUserInfoForm();
+                await test.step('Attempt update with existing email and submit', async () => {
+                    await accountPage.changeEmail(differentExistingEmail);
+                    await accountPage.clickSaveButton();
+                });
 
-                const updatedUserInfo = await accountPage.extractUserDataFromForm();
+                await test.step('Verify email remains unchanged after reload', async () => {
+                    await page.reload();
+                    await accountPage.waitForUserInfoForm();
 
-                expect(updatedUserInfo.email,
-                    `Email should not be updated when existing email submitted.`
-                ).toBe(originalEmail);
+                    const updatedUserInfo = await accountPage.extractUserDataFromForm();
+
+                    expect(updatedUserInfo.email,
+                        `Email should not be updated when existing email submitted.`
+                    ).toBe(originalEmail);
+                });
             });
-
         });
-
     })
-
 })
-
-
-
-

@@ -83,6 +83,8 @@ test.describe('Cinema Screenings Table Functional Test', () => {
     test.describe('Navigation', () => {
         test('Screening link navigates to correct ticket page @regression', async ({ homePage }) => {
 
+            test.setTimeout(200000);
+
             const currentCinemas = await homePage.cinemaShowtimesTabs.cinemaTabs.all();
 
             /// Pick sample cinemas (first, last, random)

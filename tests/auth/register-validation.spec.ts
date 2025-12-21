@@ -17,18 +17,21 @@ test.describe('Register Form: Field Validation', () => {
             // Iterating over each test case for the current field
             for (const testCase of fieldData.tests) {
 
-                test(`${field}: ${testCase.case}`, async ({ registerPage }, testInfo ) => {
+                test(`${field}: ${testCase.case}`, async ({ registerPage }, testInfo) => {
 
                     if (field === 'email') {
                         testInfo.annotations.push({ type: 'regression', description: '@regression' });
                     }
 
-                    // Go to register page, trigger field validation and get the error message
-                    await registerPage.navigateToRegisterPage();
-                    await registerPage.triggerFieldValidation(field, testCase.input);
+                    await test.step('Navigate to register page, trigger field validation and get error message', async () => {
 
-                    // Assertion: Error message matches expected error message
-                    await registerPage.verifyFieldErrorMsg(field, testCase.expectedError);
+                        await registerPage.navigateToRegisterPage();
+                        await registerPage.triggerFieldValidation(field, testCase.input);
+                    });
+
+                    await test.step('Verify error message matches expected error message', async () => {
+                        await registerPage.verifyFieldErrorMsg(field, testCase.expectedError);
+                    });
 
                 })
             }
