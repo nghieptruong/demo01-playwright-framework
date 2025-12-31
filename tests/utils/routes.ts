@@ -41,5 +41,4 @@ export const apiURLs = {
     userInfoByUsername: (username: string) => apiBaseURL + apiWithParamEndpoints.userInfoByUsername(username),
 }
 
-export const apiCinemaRegex = /\/api\/QuanLyRap\/LayThongTinLichChieuHeThongRap\?maHeThongRap=\w+&maNhom=GP09/ ;
-export const userInfoRegex = /\/api\/QuanLyNguoiDung\/TimKiemNguoiDung\?MaNhom=GP09&tuKhoa=*/; ;
+export const apiCinemaRegex = /\/api\/QuanLyRap\/LayThongTinLichChieuHeThongRap\?maHeThongRap=\w+&maNhom=GP09/ 

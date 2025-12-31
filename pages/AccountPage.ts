@@ -1,6 +1,6 @@
 import { expect, Locator, Page } from "@playwright/test";
 import { BaseForm } from "./BaseForm";
-import { pageURLs, userInfoRegex } from "../tests/utils/routes";
+import { pageURLs } from "../tests/utils/routes";
 import { AccountData, AccountDataFields } from "../api/users/accounts.types";
 import { EditableAccountFields } from "../tests/types/auth.types";
 import { OrderHistory } from "./components/OrderHistory";

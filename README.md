@@ -93,6 +93,91 @@ BASE_URL=https://demo1.cybersoft.edu.vn/
 The `BASE_URL` will be used as the base URL for all Playwright tests. You can change this value to test against different environments.
 
 
+## Environment Management
+
+> **Note:** If you only have one environment (e.g., only production), you can skip this section. Your existing `.env` file with `BASE_URL` works fine, and you can continue using `npx playwright test` normally. This section is for projects that need to test against multiple environments (development, staging, production, etc.).
+
+
+This project supports running tests against multiple environments using environment-specific configuration files and npm scripts.
+
+### Setup
+
+**1. Install dotenv-cli:**
+```bash
+npm install --save-dev dotenv-cli
+```
+
+**2. Create environment files:**
+
+Create separate `.env` files for each environment in your project root:
+
+```
+.env.example     # Template documenting required variables
+.env.dev         # Development environment
+.env.staging     # Staging environment  
+.env.prod        # Production environment
+```
+
+**Example environment files:**
+
+`.env.example`:
+```
+BASE_URL=https://your-app-url.com/
+API_URL=https://your-api-url.com/
+```
+
+`.env.dev`:
+```
+BASE_URL=https://dev.example.com/
+API_URL=https://api-dev.example.com/
+```
+
+`.env.staging`:
+```
+BASE_URL=https://staging.example.com/
+API_URL=https://api-staging.example.com/
+```
+
+`.env.prod`:
+```
+BASE_URL=https://demo1.cybersoft.edu.vn/
+API_URL=https://api.cybersoft.edu.vn/
+```
+
+**3. Update .gitignore:**
+
+Ensure sensitive environment files are not committed:
+```
+.env*
+!.env.example
+```
+
+**4. Add NPM scripts to package.json:**
+
+```json
+{
+  "scripts": {
+    "test:dev": "dotenv -e .env.dev -- npx playwright test",
+    "test:staging": "dotenv -e .env.staging -- npx playwright test",
+    "test:prod": "dotenv -e .env.prod -- npx playwright test"
+  }
+}
+```
+
+**5. Run tests**
+
+For instructions on how to run tests for different environments, see the [Running Tests Against Different Environments](#running-tests-against-different-environments) section below.
+
+
+### Best Practices
+
+- **Never commit sensitive data**: Ensure `.env*` files (except `.env.example`) are in `.gitignore`
+- **Document required variables**: Keep `.env.example` updated with all required environment variables
+- **Use in CI/CD**: In CI pipelines, set environment variables through your CI platform (GitHub Actions, Jenkins, etc.) rather than committing `.env` files
+- **Validate environment**: Consider adding startup checks to ensure required environment variables are set before running tests
+- **Separate concerns**: Use different `.env` files for different purposes (local development, CI, staging, production)
+
+
 ## Add New Tests
 
 ### Page Object Model (POM) 
@@ -216,11 +301,63 @@ npx playwright test --grep @smoke
 npx playwright test --grep-invert @regression
 ```
 
+
+
+### Running Tests Against Different Environments
+
+> **Note:** The following instructions are for future use if you need to run tests against multiple environments. If your current setup only uses a single environment, you can skip this section.
+
+**Basic usage:**
+```bash
+# Run all tests on development environment
+npm run test:dev
+
+# Run all tests on staging environment
+npm run test:staging
+
+# Run all tests on production environment
+npm run test:prod
+```
+
+**With additional Playwright options:**
+
+You can pass any Playwright options after `--`:
+
+```bash
+# Run smoke tests on staging
+npm run test:staging -- --grep @smoke
+
+# Run specific test file on development in UI mode
+npm run test:dev -- tests/auth/login.spec.ts --ui
+
+# Run specific folder in headed mode on staging
+npm run test:staging -- tests/booking/ --headed
+
+# Combine multiple options
+npm run test:staging -- tests/auth/ --grep @regression --project=firefox
+```
+
 ### Running Tests in VS Code
-The Playwright Test for VS Code extension provides a seamless integrated experience. 
-- Testing Sidebar: You can run, debug, and view tests directly from the testing sidebar.
-- Gutter Icons: Click the green triangle icons next to individual tests or suites in the editor to run them.
-- Debugging: Set breakpoints in your code and run the test in debug mode to step through execution live. 
+
+
+The Playwright Test for VS Code extension provides a seamless integrated experience.
+
+**Selecting Projects to Run:**
+
+In the Testing Sidebar, you can enable/disable specific projects to control which tests are visible and executed:
+
+1. **View Projects**: In the Testing Sidebar, you'll see all configured projects (e.g., `chromium`, `firefox`, `webkit`)
+2. **Enable/Disable Projects**: 
+   - Click the "Run Test" triangle icon next to a disabled project name
+   - A popup notification will appear in the bottom right saying the project is disabled
+   - Click the "Enable" button in the popup to enable that project
+   - Disabled projects are grayed out and won't run
+3. **Multiple Projects**: You can enable multiple projects simultaneously 
+
+**VS Code Features:**
+- **Testing Sidebar**: View, run, and debug tests directly from the testing sidebar
+- **Gutter Icons**: Click the green triangle icons next to individual tests or suites in the editor to run them
+- **Debugging**: Set breakpoints in your code and run tests in debug mode to step through execution live 
 
 
 ## Generate Allure Report
