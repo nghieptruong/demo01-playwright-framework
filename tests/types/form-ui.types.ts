@@ -1,8 +1,8 @@
 
 // =========  Account Update Form  ========= 
-import type { AccountData } from '../../api/users/accounts.types';
+import type { AccountDataApi } from '../../api/users/accounts.types';
 
-export type EditableAccountData = Omit<AccountData, 'taiKhoan' | 'maLoaiNguoiDung'>;
+export type EditableAccountData = Omit<AccountDataApi, 'taiKhoan' | 'maLoaiNguoiDung'>;
 
 export const editableAccountDataKeys: readonly (keyof EditableAccountData)[] = [
     'hoTen',

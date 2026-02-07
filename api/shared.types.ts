@@ -1,26 +1,22 @@
-export interface CinemaBase {
-    maHeThongRap: string;
-    tenHeThongRap: string;
-    logo: string;
-}
-
 export interface MovieBase {
     maPhim: number;
     tenPhim: string;
     hinhAnh: string;
 }
 
-export interface BranchBase {
-    maCumRap: string;
-    tenCumRap: string;
-    diaChi: string;
-}
-
-export interface LichChieuPhim {   // screeningSchedule
+export interface ScreeningBase {
     maLichChieu: string | number;
-    maRap: string;
-    tenRap: string;
+    maRap: string | number;
     ngayChieuGioChieu: string;
     giaVe: number;
     thoiLuong: number;
+}
+
+export interface Movie extends MovieBase {
+    biDanh: string;
+    trailer: string;
+    moTa: string;
+    maNhom: string;
+    ngayKhoiChieu: string;
+    danhGia: number;
 }

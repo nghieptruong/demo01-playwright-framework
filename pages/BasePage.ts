@@ -1,5 +1,5 @@
 import { expect, Locator, Page } from "@playwright/test";
-import { pageURLs } from "../tests/utils/routes";
+import { pageURLs } from "../tests/utils/pageRoutes";
 
 export abstract class BasePage {
 
@@ -18,6 +18,11 @@ export abstract class BasePage {
 
     async navigateBack() {
         await this.page.goBack();
+        await this.page.waitForLoadState();
+    }
+
+    async reloadPage() {
+        await this.page.reload();
         await this.page.waitForLoadState();
     }
 

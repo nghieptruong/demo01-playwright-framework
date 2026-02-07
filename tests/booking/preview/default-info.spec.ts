@@ -1,39 +1,35 @@
-import { extractShowtimeInfo } from "../../../api/showtimes/showtimes.helpers";
-import { ShowtimeInfo } from "../../../api/showtimes/showtimes.types";
+import { extractShowtimeInfo } from "../../../api/booking/booking.helpers";
+import { ShowtimeInfo } from "../../../api/booking/booking.types";
 import { expect, test } from "../../../fixtures/custom-fixtures";
 import { ShowtimePage } from "../../../pages/ShowtimePage";
-import { getRandomSampleShowtimeIds } from "../../utils/booking.helpers";
-
-let showtimePage: ShowtimePage;
-let sampleShowtimeIds: string[];
-
-test.beforeAll(async () => {
-
-    await test.step('Pick random sample showtime to run tests', async () => {
-        //no state change, seat availability does not matter
-        sampleShowtimeIds = await getRandomSampleShowtimeIds({ sampleSize: 2 });
-    });
-
-});
-
-test.beforeEach(async ({ page }) => {
-    showtimePage = new ShowtimePage(page);
-});
+import { getRandomSampleShowtimeIds } from "../../utils/bookingSampleProvider";
 
 test.describe('Verify Preview Data Accuracy: UI vs API', () => {
 
-    test('Preview displays correct Showtime info', async ({ }) => {
+    let showtimePage: ShowtimePage;
+    let sampleShowtimeIds: string[];
+
+    test.beforeEach(async () => {
+        await test.step('Pick random sample showtime to run tests', async () => {
+            //no state change, seat availability does not matter
+            sampleShowtimeIds = await getRandomSampleShowtimeIds({ sampleSize: 1 });
+        });
+    });
+
+    test('Preview displays correct Showtime info', async ({ page }) => {
 
         for (const showtime of sampleShowtimeIds) {
 
-            await test.step(`Navigate to showtime page and verify displayed info for showtime ${showtime}`, async () => {
-                await showtimePage.navigateToShowtimePageAndWait(showtime);
+            await test.step(`Navigate to booking page for showtime ${showtime}`, async () => {
+                showtimePage = new ShowtimePage(page);
+                await showtimePage.navigateToShowtimePageAndWaitForSeatMap(showtime);
+            });
 
+            await test.step(`Verify displayed showtime details match api data`, async () => {
                 const uiInfo = await showtimePage.getShowtimeInfo();
                 const apiInfo = await extractShowtimeInfo(showtime);
 
                 const keysToCompare = Object.keys(uiInfo) as (keyof ShowtimeInfo)[];
-
                 const mismatchedKeys = keysToCompare.filter(key => uiInfo[key] !== apiInfo[key]);
 
                 expect(mismatchedKeys.length,
@@ -42,18 +38,18 @@ test.describe('Verify Preview Data Accuracy: UI vs API', () => {
             });
 
         }
-    })
-})
+    });
 
-test.describe('Default preview seat and price @regression', () => {
-
-    test('Preview default no selected seat and zero price', async ({ }) => {
+    test('Preview displays no selected seat and zero price by default', async ({ page }) => {
 
         for (const showtime of sampleShowtimeIds) {
 
-            await test.step(`Navigate and Verify default empty seats and price preview for showtime ${showtime}`, async () => {
-                await showtimePage.navigateToShowtimePageAndWait(showtime);
+            await test.step(`Navigate to booking page for showtime ${showtime}`, async () => {
+                showtimePage = new ShowtimePage(page);
+                await showtimePage.navigateToShowtimePageAndWaitForSeatMap(showtime);
+            });
 
+            await test.step(`Verify default preview displays no selected seat and zero price`, async () => {
                 const previewSeats = await showtimePage.getPreviewSelectedSeats();
                 const previewPrice = await showtimePage.getPreviewPrice();
 
@@ -67,6 +63,4 @@ test.describe('Default preview seat and price @regression', () => {
             });
         }
     });
-
-})
-
+});

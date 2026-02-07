@@ -1,10 +1,10 @@
-
-import { matchBranchNameAndId } from "../../api/cinemas/cinemas.helpers";
-import { fetchShowtimesByMovieId } from "../../api/movies/movies.api";
-import { filterMoviesWithAvailableShowtimes, getBranchNamesForMovieBycinema, getCinemaNamesForMovie, getMovieDurationMinById, getMovieInfoById, getShowtimeIdsByMovieIdBranchId } from "../../api/movies/movies.helpers";
+import { getMovieSchedule } from "../../api/cinemas/cinemas.api";
+import { getBranchNamesByMovieAndCinema, getCinemaSysNameShowingMovie, getMovieShowingDurationInMinutes, getShowtimeIdsByMovieIdBranchId, matchBranchNameAndId } from "../../api/cinemas/helpers";
+import { getMovieScreenings } from "../../api/movies/movies.api";
+import { getAllMovieIds } from "../../api/movies/movies.helpers";
 import { expect, test } from "../../fixtures/custom-fixtures";
 import { MoviePage } from "../../pages/MoviePage";
-import { pickSampleItems, shuffleItems } from "../utils/shared.helpers";
+import { pickSampleItems, shuffleItems } from "../utils/dataManipulation.helpers";
 
 let moviePage: MoviePage;
 let sampleMovies: string[];
@@ -14,16 +14,16 @@ test.describe('Movie Detail Page Data Verification', () => {
     test.beforeEach(async ({ page }) => {
         moviePage = new MoviePage(page);
 
-        const movieIds = await filterMoviesWithAvailableShowtimes();
+        // Pick sample movies to run test
+        const movieIds = await getAllMovieIds();
         sampleMovies = pickSampleItems(shuffleItems(movieIds));
-
     });
 
     test('Verify Movie Details', async () => {
 
         for (const movieId of sampleMovies) {
 
-            const showtimes = await fetchShowtimesByMovieId(movieId);
+            const showtimes = await getMovieSchedule(movieId);
 
             if (showtimes.length === 0) {
                 console.warn(`No showtimes found for movie id ${movieId}, no movie detail page to verify.`);
@@ -38,12 +38,12 @@ test.describe('Movie Detail Page Data Verification', () => {
             const uiDuration = await moviePage.getMovieDurationMinutes();
             const uiRating = await moviePage.getMovieRating();
 
-            const apiMovieData = await getMovieInfoById(movieId);
-            const apiDuration = await getMovieDurationMinById(movieId);
+            const apiMovieScreenings = await getMovieScreenings(movieId);
+            const apiDuration = await getMovieShowingDurationInMinutes(movieId);
 
             expect.soft(uiTitle,
                 `Movie title mismatch for movie id ${movieId}`
-            ).toBe(apiMovieData.tenPhim);
+            ).toBe(apiMovieScreenings.tenPhim);
 
             expect.soft(uiDuration,
                 `Movie duration mismatch for movie id ${movieId}`
@@ -51,12 +51,12 @@ test.describe('Movie Detail Page Data Verification', () => {
 
             expect.soft(uiRating,
                 `Movie rating mismatch for movie id ${movieId}`
-            ).toBe(apiMovieData.danhGia);
+            ).toBe(apiMovieScreenings.danhGia);
 
         }
     });
 
-    test('Verify Movie Showtimes Details', async () => {
+    test('Verify Movie Showtimes Details In Vertical Tabs', async () => {
 
         for (const movieId of sampleMovies) {
 
@@ -66,7 +66,7 @@ test.describe('Movie Detail Page Data Verification', () => {
 
             // Get available cinemas and sort
             const uiCinemaNames = await moviePage.movieShowtimesTabs.getAllCinemaNames();
-            const apiCinemaNames = await getCinemaNamesForMovie(movieId);
+            const apiCinemaNames = await getCinemaSysNameShowingMovie(movieId);
 
             const uiCinemasSorted = uiCinemaNames.sort();
             const apiCinemasSorted = apiCinemaNames.sort();
@@ -85,7 +85,7 @@ test.describe('Movie Detail Page Data Verification', () => {
                 const uiBranchShowtimesMap = await moviePage.movieShowtimesTabs.getShowtimesGroupedByBranch();
 
                 const uiBranchNames = Object.keys(uiBranchShowtimesMap);
-                const apiBranches = await getBranchNamesForMovieBycinema(movieId, cinemaName);
+                const apiBranches = await getBranchNamesByMovieAndCinema(movieId, cinemaName);
 
                 const uiBranchesSorted = uiBranchNames.sort();
                 const apiBranchesSorted = apiBranches.sort();

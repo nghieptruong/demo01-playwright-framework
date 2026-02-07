@@ -1,44 +1,53 @@
 import { test } from "../../fixtures/custom-fixtures";
-import { generateIncorrectCasingPasswordLoginData, generateInvalidPasswordLoginData, generateInvalidUsernameLoginData } from "../utils/auth.testDataGenerator";
-import { pickRandomItem } from "../utils/shared.helpers";
-import { AccountData } from "../../api/users/accounts.types";
-import { userAccountDisplay } from "../test-data/testUsers";
+import { changePasswordCasing, generateDifferentPassword, generateDifferentUsername } from "../utils/accountDataGenerator";
+import { AccountDataApi } from "../../api/users/accounts.types"; 
+import { createNewTestUser, deleteTestUser } from "../utils/testUserProvider";
 
 test.describe('Login Functional Tests', async () => {
 
-    let userData: AccountData;
+    let userData: AccountDataApi;
     let taiKhoan: string;
     let matKhau: string;
     let hoTen: string;
 
     test.beforeEach(async ({ loginPage }) => {
+        await test.step('Create new test user before test', async () => {
+            userData = await createNewTestUser();
 
-        await test.step('Navigate to login page and pick random test user data before test', async () => {
-            await loginPage.navigateToLoginPage();
-
-            userData = pickRandomItem(userAccountDisplay);
             taiKhoan = userData.taiKhoan;
             matKhau = userData.matKhau;
             hoTen = userData.hoTen;
+        });
+
+        await test.step('Navigate to login page', async () => {
+                await loginPage.navigateToLoginPage();
+            });
+    })
+
+    test.afterEach(async () => {
+        await test.step('Delete test user after test', async () => {
+            await deleteTestUser(taiKhoan);
         });
     })
 
     test.describe('Valid Login', () => {
 
         test('Successful login with correct credentials @smoke @regression', async ({ loginPage }) => {
-            await test.step('Fill login form and submit with valid credentials', async () => {
+
+            await test.step('Submit login form with valid credentials', async () => {
                 await loginPage.fillLoginFormAndSubmit(taiKhoan, matKhau);
             });
 
-            await test.step('Verify success message, loggedin status and correct profile name', async () => {
+            await test.step('Verify success message and user profile link with correct name', async () => {
                 await loginPage.verifySuccessMsgAndLoggedInStatus();
                 await loginPage.topBarNavigation.verifyUserDisplayedName(hoTen);
             });
+
         })
 
         test('Successful login with username in different casing', async ({ loginPage }) => {
 
-            await test.step('Fill login form and submit with username in different casing', async () => {
+            await test.step('Submit login form with username in different casing and correct password', async () => {
                 const usernameUppercase = taiKhoan.toUpperCase();
                 await loginPage.fillLoginFormAndSubmit(usernameUppercase, matKhau);
             });
@@ -71,8 +80,8 @@ test.describe('Login Functional Tests', async () => {
             test('Incorrect Username', async ({ loginPage }) => {
 
                 await test.step('Submit login form with incorrect username', async () => {
-                    const invalidData = generateInvalidUsernameLoginData(userData);
-                    await loginPage.fillLoginFormAndSubmit(invalidData.taiKhoan, invalidData.matKhau);
+                    const invalidUsername = generateDifferentUsername(userData.taiKhoan);
+                    await loginPage.fillLoginFormAndSubmit(invalidUsername, userData.matKhau);
                 });
 
                 await test.step('Verify invalid credential alert is displayed and user remains in guest mode', async () => {
@@ -84,8 +93,8 @@ test.describe('Login Functional Tests', async () => {
             test('Incorrect Password', async ({ loginPage }) => {
 
                 await test.step('Submit login form with incorrect password', async () => {
-                    const invalidData = generateInvalidPasswordLoginData(userData);
-                    await loginPage.fillLoginFormAndSubmit(invalidData.taiKhoan, invalidData.matKhau);
+                    const invalidPassword = generateDifferentPassword(userData.matKhau);
+                    await loginPage.fillLoginFormAndSubmit(userData.taiKhoan, invalidPassword);
                 });
 
                 await test.step('Verify invalid credential alert is displayed and user remains in guest mode', async () => {
@@ -97,8 +106,8 @@ test.describe('Login Functional Tests', async () => {
             test('Incorrect password casing @regression', async ({ loginPage }) => {
 
                 await test.step('Submit login form with incorrect password casing', async () => {
-                    const invalidData = generateIncorrectCasingPasswordLoginData(userData);
-                    await loginPage.fillLoginFormAndSubmit(invalidData.taiKhoan, invalidData.matKhau);
+                    const pwWrongCasing = changePasswordCasing(userData.matKhau);
+                    await loginPage.fillLoginFormAndSubmit(userData.taiKhoan, pwWrongCasing);
                 });
 
                 await test.step('Verify invalid credential alert is displayed and user remains in guest mode', async () => {

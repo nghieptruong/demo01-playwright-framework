@@ -1,6 +1,6 @@
 import { expect, Locator, Page } from "@playwright/test";
 import { BasePage } from "../BasePage";
-import { pageURLs } from "../../tests/utils/routes";
+import { pageURLs } from "../../tests/utils/pageRoutes";
 
 export type CarouselMovieInfo = {
     maPhim: string,

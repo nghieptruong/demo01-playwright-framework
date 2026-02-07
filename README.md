@@ -19,10 +19,11 @@ These repository tests leverage the following technologies and libraries:
 ## Project Structure
 ```
 api/                   # Functions, Types to fetch and transform API data 
-  ├── cinemas/         # Cinema domain     
+  ├── cinemas/         # Cinema & schedule domain     
   ├── movies/          # Movie domain
-  ├── showtimes/       # Showtime and Ticketing domain 
-  └── users/           # User Account domain
+  ├── booking/    	   # Showtime booking/ticketing domain 
+  ├── users/           # User Account domain
+  └── config/          # API Config (e.g. routes)
 fixtures/              # Custom Playwright Page fixtures 
 pages/                 # Page Object Model classes
   └── components/      # Reusable UI components (e.g., navigation bar, dropdowns, tabs)
@@ -43,18 +44,17 @@ playwright.config.ts   # Playwright configuration file
 package.json           # Project dependencies and npm scripts
 tsconfig.json          # Configuration for compiler to transform .ts into .js
 merge.config.ts        # Config for the merge step in CI for sharding to speed up runs
-.env                   # Environment variables (e.g., BASE_URL)
+.env.qa                # Environment variables, credentials for QA environment (e.g., BASE_URL)
 ```
 
 ## Test Data Strategy
 
-Due to a lack of backend access and data seeding capabilities, tests dynamically discover eligible test data via public APIs. This ensures correctness in a shared, mutable environment but increases execution time.
+### User Account Management
+Tests automatically create fresh user accounts via API before each test method and delete them after test completion. This ensures test isolation and prevents conflicts in concurrent test execution.
 
-In a controlled test environment, these tests would instead:
-- Create required data via API
-- Use seeded fixtures
-- Reset state between tests
-- Remove dynamic discovery logic
+### Showtime and Booking Data
+Due to project scope limitations, showtime and booking data is currently fetched and filtered from existing API responses rather than being created per test. This approach is subject to change in future iterations to fully utilize API-based test data creation.
+
 
 <br>
 
@@ -72,7 +72,7 @@ To get started with the tests:
 1. **Clone the repository**
 
 	```bash
-	git clone https://github.com/trang-le298/demo01-playwright-framework.git
+	git clone git@github.com:trangle298/demo01-playwright-framework.git
 	cd demo01-playwright-framework  
 	```
 
@@ -84,13 +84,6 @@ To get started with the tests:
 
 ## Configuration
 - Edit `playwright.config.ts` for test settings, reporters, and browser options.
-- Create a `.env` file in the project root to set environment-specific values. Example:
-
-```
-BASE_URL=https://demo1.cybersoft.edu.vn/
-```
-
-The `BASE_URL` will be used as the base URL for all Playwright tests. You can change this value to test against different environments.
 
 
 ## Environment Management
@@ -120,29 +113,15 @@ Create separate `.env` files for each environment in your project root:
 
 **Example environment files:**
 
-`.env.example`:
-```
-BASE_URL=https://your-app-url.com/
-API_URL=https://your-api-url.com/
-```
+`.env.qa`:
 
-`.env.dev`:
-```
-BASE_URL=https://dev.example.com/
-API_URL=https://api-dev.example.com/
-```
-
-`.env.staging`:
-```
-BASE_URL=https://staging.example.com/
-API_URL=https://api-staging.example.com/
-```
-
-`.env.prod`:
 ```
 BASE_URL=https://demo1.cybersoft.edu.vn/
-API_URL=https://api.cybersoft.edu.vn/
+
+ADMIN_USERNAME=exampleAdmin
+ADMIN_PASSWORD=examplePW
 ```
+
 
 **3. Update .gitignore:**
 
@@ -282,7 +261,7 @@ npx playwright test --project=chromium
 
 - To run all tests contained within a specific folder, provide the path to the directory: 
 ```bash
-npx playwright test tests/login/
+npx playwright test tests/auth/
 ```
 
 - To run a specific test file, provide the file name:
@@ -292,15 +271,14 @@ npx playwright test login.spec.ts
 - To run only tests with a specific tag, use the `--grep` option:
 
 ```bash
-npx playwright test --grep @smoke
+npx playwright test --grep "@smoke"
 ```
 
 - You can also exclude tests with a tag using `--grep-invert`:
 
 ```bash
-npx playwright test --grep-invert @regression
+npx playwright test --grep-invert "@regression"
 ```
-
 
 
 ### Running Tests Against Different Environments

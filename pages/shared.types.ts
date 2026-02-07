@@ -3,3 +3,4 @@ export type OrderDetails = {
     bookedSeats: string[];
     price: string;
 }
+

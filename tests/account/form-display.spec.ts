@@ -2,60 +2,65 @@ import { accountDataKeys } from "../../api/users/accounts.types";
 import { expect, test } from "../../fixtures/custom-fixtures";
 import { AccountPage } from "../../pages/AccountPage";
 import { LoginPage } from "../../pages/LoginPage";
-import { userAccountDisplay } from "../test-data/testUsers";
+import { AccountDataApi } from "../../api/users/accounts.types";
+import { createTestUserForAccountFormTest, deleteTestUser } from "../utils/testUserProvider";
+import { loginAndGoToHomePage } from "../utils/shared.helpers";
 
 let accountPage: AccountPage;
 let loginPage: LoginPage;
+let testUser: AccountDataApi;
 
 test.beforeEach(async ({ page }) => {
     loginPage = new LoginPage(page);
     accountPage = new AccountPage(page);
 
-    await loginPage.navigateToLoginPage();
+    await test.step('Login as new test user', async () => {
+        // Using specific user generator due to known issue with special characters and spaces in name field
+        testUser = await createTestUserForAccountFormTest();
+        await loginAndGoToHomePage(loginPage, testUser);
+    });
+
+    await test.step(`Navigate to account page`, async () => {
+        await accountPage.navigateToAccountPage();
+    });
 });
 
-test.describe('Verify Account Displays Correct User Data', () => {
+test.afterEach(async () => {
+    await test.step('Delete test user after test', async () => {
+        await deleteTestUser(testUser.taiKhoan);
+    });
+});
 
-    for (const user of userAccountDisplay) {
+test(`Verify account form displays correct user data `, async () => {
 
-        test(`Check account data for user: ${user.taiKhoan}`, async () => {
+    await test.step(`Verify user info form is displayed`, async () => {
+        // Assertion: User account form is visible
+        const formVisible = await accountPage.isUserInfoFormVisible();
 
-            await test.step(`Login and navigate to account page`, async () => {
-                await loginPage.fillLoginFormAndSubmit(user.taiKhoan, user.matKhau);
-                await loginPage.topBarNavigation.verifyUserIsLoggedIn();
-                await accountPage.navigateToAccountPage();
-            });
+        expect(formVisible,
+            `User info form not visible for user: ${testUser.taiKhoan}`
+        ).toBe(true);
+    });
 
-            await test.step(`Verify user info form is displayed`, async () => {
-                // Assertion: User account form is visible
-                const formVisible = await accountPage.isUserInfoFormVisible();
+    await test.step(`Extract and verify user info data`, async () => {
 
-                expect(formVisible,
-                    `User info form not visible for user: ${user.taiKhoan}`
-                ).toBe(true);
-            });
+        const uiUserInfo = await accountPage.extractUserDataFromForm();
 
-            await test.step(`Extract and verify user info data`, async () => {
+        // Assertion 1: Correct user is loaded (username is unique and read-only)
+        expect(uiUserInfo.taiKhoan, `Wrong user loaded`).toBe(testUser.taiKhoan);
 
-                const uiUserInfo = await accountPage.extractUserDataFromForm();
+        // Assertion 2: Check all other fields 
+        for (const key of accountDataKeys) {
+            if (key === 'taiKhoan') continue; // Skip username as it's already verified
 
-                // Assertion 1: Correct user is loaded (username is unique and read-only)
-                expect(uiUserInfo.taiKhoan, `Wrong user loaded`).toBe(user.taiKhoan);
+            expect.soft(uiUserInfo[key],
+                `Mismatch for user ${testUser.taiKhoan}, field ${key}`
+            ).toBe(testUser[key]);
+        }
+    });
 
-                // Assertion 2: Check all other fields 
-                for (const key of accountDataKeys) {
-                    if (key === 'taiKhoan') continue; // Skip username as it's already verified
-
-                    expect.soft(uiUserInfo[key],
-                        `Mismatch for user ${user.taiKhoan}, field ${key}`
-                    ).toBe(user[key]);
-                }
-            });
-
-            await test.step(`Logout to reset state`, async () => {
-                await loginPage.topBarNavigation.clickLogoutLink();
-                await loginPage.topBarNavigation.confirmLogoutAndVerifySuccessMsg();
-            });
-        });
-    }
+    await test.step(`Logout to reset state`, async () => {
+        await loginPage.topBarNavigation.clickLogoutLink();
+        await loginPage.topBarNavigation.confirmLogoutAndVerifySuccessMsg();
+    });
 });

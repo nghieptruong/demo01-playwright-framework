@@ -1,7 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { HomePage } from '../../pages/HomePage';
 
-
 // This test checks for changes in Homepage UI components at responsive breakpoint (959px)
 
 test.describe('Responsive Homepage UI', () => {

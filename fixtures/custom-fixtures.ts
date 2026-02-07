@@ -2,8 +2,8 @@ import { HomePage } from '../pages/HomePage';
 import { LoginPage } from '../pages/LoginPage';
 import { test as base } from '@playwright/test';
 import { RegisterPage } from '../pages/RegisterPage';
-import { userPrimary } from '../tests/test-data/testUsers';
-import { AccountData } from '../api/users/accounts.types';
+import { testUser } from '../tests/test-data/testUsers';
+import { AccountDataApi } from '../api/users/accounts.types';
 
 type MyFixtures = {
   homePage: HomePage;
@@ -11,7 +11,7 @@ type MyFixtures = {
   registerPage: RegisterPage;
   loggedInHomepage: {
     homePage: HomePage;
-    user: AccountData;
+    user: AccountDataApi;
   };
 };
 
@@ -34,8 +34,8 @@ export const test = base.extend<MyFixtures>({
   },
 
   loggedInHomepage: async ({ page, loginPage }, use) => {
-    // Use primary user for logged-in homepage
-    const user = userPrimary;
+    // Use default test user for logged-in homepage
+    const user = testUser;
 
     // Login flow
     await loginPage.navigateToLoginPage();

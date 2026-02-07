@@ -3,8 +3,8 @@
  * Contains validation test cases for form-level validation (cross-field validation)
  */
 
-import { generateValidRegisterData } from "./auth.testDataGenerator";
-import { userPrimary } from "../test-data/testUsers";
+import { generateValidUiRegisterData } from "./accountDataGenerator";
+import { testUser } from "../test-data/testUsers";
 
 export interface FormValidationInput {
     taiKhoan: string;
@@ -34,10 +34,10 @@ export interface AccountFormValidationRules {
 }
 
 // Generate base data once to ensure consistency
-const baseData1 = generateValidRegisterData();
-const baseData2 = generateValidRegisterData();
-const baseData4 = generateValidRegisterData();
-const baseData3 = generateValidRegisterData();
+const baseData1 = generateValidUiRegisterData();
+const baseData2 = generateValidUiRegisterData();
+const baseData4 = generateValidUiRegisterData();
+const baseData3 = generateValidUiRegisterData();
 
 // Register form validation rules
 export const registerFormValidationRules: RegisterFormValidationRules = {
@@ -72,7 +72,7 @@ export const registerFormValidationRules: RegisterFormValidationRules = {
             {
                 case: "existingUsername",
                 input: {
-                    taiKhoan: userPrimary.taiKhoan,
+                    taiKhoan: testUser.taiKhoan,
                     matKhau: baseData3.matKhau,
                     confirmPassWord: baseData3.matKhau,
                     hoTen: baseData3.hoTen,
@@ -91,7 +91,7 @@ export const registerFormValidationRules: RegisterFormValidationRules = {
                     matKhau: baseData4.matKhau,
                     confirmPassWord: baseData4.matKhau,
                     hoTen: baseData4.hoTen,
-                    email: userPrimary.email
+                    email: testUser.email
                 },
                 expectedError: "Email đã tồn tại!"
             }
@@ -102,11 +102,11 @@ export const registerFormValidationRules: RegisterFormValidationRules = {
             {
                 case: "existingUsernameAndEmail",
                 input: {
-                    taiKhoan: userPrimary.taiKhoan,
+                    taiKhoan: testUser.taiKhoan,
                     matKhau: baseData4.matKhau,
                     confirmPassWord: baseData4.matKhau,
                     hoTen: baseData4.hoTen,
-                    email: userPrimary.email
+                    email: testUser.email
                 },
                 expectedError: "Tài khoản đã tồn tại!"
             }

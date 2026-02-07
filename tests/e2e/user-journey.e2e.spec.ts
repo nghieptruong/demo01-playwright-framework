@@ -1,67 +1,58 @@
 import { test, expect } from "../../fixtures/custom-fixtures";
 import { ShowtimePage } from "../../pages/ShowtimePage";
 import { MoviePage } from "../../pages/MoviePage";
-import { getSampleShowtimesWithAvailableSeats } from "../utils/booking.helpers";
-import { findMovieIdByShowtimeId } from "../../api/movies/movies.helpers";
-import { ShowtimeInfo } from "../../api/showtimes/showtimes.types";
-import { findCinemaByShowtimeId, getCinemaInfoById } from "../../api/cinemas/cinemas.helpers";
-import { Cinema } from "../../api/cinemas/cinemas.types";
-import { HomePage } from "../../pages/HomePage";
+import { getSampleShowtimesWithAvailableSeats } from "../utils/bookingSampleProvider";
+import { findMovieIdByShowtimeId } from "../../api/cinemas/helpers";
+import { findCinemaIdByShowtimeId, findMovieTitleByShowtimeId, getBranchNameByShowtimeId } from "../../api/booking/booking.helpers";
 import { LoginPage } from "../../pages/LoginPage";
-import { userE2EJourney } from "../test-data/testUsers";
+import { BookingData } from "../../api/booking/booking.types";
+import { pickRandomNumberBetween } from "../utils/dataManipulation.helpers";
+import { createNewTestUser, deleteTestUser } from "../utils/testUserProvider";
+import { loginAndGoToHomePage } from "../utils/shared.helpers";
+import { getShowtimeBookingData } from "../../api/booking/booking.api";
+import { getCinemaSystem } from "../../api/cinemas/cinemas.api";
+import { AccountDataApi } from "../../api/users/accounts.types";
 
 test.setTimeout(120000);
 
 test.describe('E2E: User Journey - Discovery & Browsing', () => {
 
-    test('Goal-Oriented User: Dropdown Filter → Select Showtime → Book Tickets', async ({ page }) => {
+    let showtimePage: ShowtimePage;
 
-        const homePage = new HomePage(page);
-        let showtimePage: ShowtimePage;
+    let showtimeData: BookingData;
+    let sampleShowtime: string;
+    let sampleMovieId: string;
 
-        const user = userE2EJourney[0];
+    let user: AccountDataApi;
 
-        let sampleShowtime: ShowtimeInfo;
-        let sampleShowtimeIdString: string;
-        let sampleMovieId: string;
+    test.beforeEach(async ({ page }) => {
+        await test.step('Find sample showtime with available seats to run test', async () => {
+            showtimePage = new ShowtimePage(page);
+            const numSeatsRequired = pickRandomNumberBetween(1, 8);
 
-        await test.step('Pre-test Prep: Find showtime with available seats', async () => {
+            const sampleShowtimes = await getSampleShowtimesWithAvailableSeats({ seatQuantity: numSeatsRequired });
+            test.skip(sampleShowtimes.length === 0, 'Test skipped: No showtimes with available seats found.');
 
-            const availableShowtimes = await getSampleShowtimesWithAvailableSeats({
-                // request at least 8 seats to minimize chance of sold-out during booking
-                seatQuantity: 8,
-                sampleSize: 1
-            });
-
-            test.skip(availableShowtimes.length === 0, 'Test skipped: No showtimes with available seats found.');
-
-            sampleShowtime = availableShowtimes[0];
-            sampleShowtimeIdString = sampleShowtime.maLichChieu.toString();
-            // Find movie Id for that showtime (use name would be less reliable due to duplicates)
-            sampleMovieId = await findMovieIdByShowtimeId(sampleShowtime.maLichChieu.toString());
+            sampleShowtime = sampleShowtimes[0];
+            showtimeData = await getShowtimeBookingData(sampleShowtime);
+            sampleMovieId = await findMovieIdByShowtimeId(sampleShowtime);
         });
 
-        await test.step('Login and redirect to Homepage', async () => {
-
+        await test.step('Login as new test user', async () => {
+            user = await createNewTestUser();
             const loginPage = new LoginPage(page);
-            await loginPage.navigateToLoginPage();
-
-            await loginPage.fillLoginFormAndSubmit(user.taiKhoan, user.matKhau);
-            await loginPage.verifySuccessMsgAndLoggedInStatus();
-
-            await loginPage.verifyNavigationToHomePage();
+            await loginAndGoToHomePage(loginPage, user);
         });
+    });
 
-        await test.step('Wait for dropdowns selector on Homepage to load', async () => {
-            await homePage.showtimeSelector.waitForMovieOptionsLoaded();
-        });
+    test('Goal-Oriented User: Dropdown Filter → Select Showtime → Book Tickets', async ({ page, homePage }) => {
 
         await test.step('Apply filters to find and select the wanted showtime', async () => {
-
+            // await homePage.showtimeSelector.waitForMovieOptionsLoaded();
             // Apply each filter dropdown to select the showtime
             await homePage.showtimeSelector.selectMovieById(sampleMovieId);
-            await homePage.showtimeSelector.selectCinemaBranchByName(sampleShowtime.tenCumRap);
-            await homePage.showtimeSelector.selectShowtimeById(sampleShowtimeIdString);
+            await homePage.showtimeSelector.selectCinemaBranchByName(showtimeData.thongTinPhim.tenCumRap);
+            await homePage.showtimeSelector.selectShowtimeById(sampleShowtime);
         });
 
         await test.step('Click button to navigate to showtime booking page', async () => {
@@ -75,86 +66,41 @@ test.describe('E2E: User Journey - Discovery & Browsing', () => {
 
             const showtimeInfoOnPage = await showtimePage.getShowtimeInfo();
 
-            expect(showtimeInfoOnPage.maLichChieu, 'Showtime ID mismatched').toBe(sampleShowtime.maLichChieu);
-            expect(showtimeInfoOnPage.tenPhim, 'Movie name mismatched').toBe(sampleShowtime.tenPhim);
-            expect(showtimeInfoOnPage.tenCumRap, 'Cinema branch name mismatched').toContain(sampleShowtime.tenCumRap);
+            expect(showtimeInfoOnPage.maLichChieu.toString(), 'Showtime ID mismatched').toBe(sampleShowtime);
+            expect(showtimeInfoOnPage.tenPhim, 'Movie name mismatched').toBe(await findMovieTitleByShowtimeId(sampleShowtime));
+            expect(showtimeInfoOnPage.tenCumRap, 'Cinema branch name mismatched').toContain(await getBranchNameByShowtimeId(sampleShowtime));
         });
 
         await test.step('Select seats and complete booking as logged-in user', async () => {
-
             await showtimePage.waitForSeatMapAndPreview();
             await showtimePage.selectAvailableSeatsPreferConsecutive();
 
             await showtimePage.clickBookTickets();
             await showtimePage.verifySuccessAlert();
         });
-
     });
 
-    test('Discovery User: Browse Movie Carousel → View Details → Select Showtime → Book', async ({ page }) => {
+    test('Discovery User: Browse Movie Carousel → View Details → Select Showtime → Book', async ({ page, homePage }) => {
 
-        const homePage = new HomePage(page);
         let moviePage: MoviePage;
-
-        const user = userE2EJourney[1];
-
-        let sampleShowtimeIdString: string;
-        let sampleMovieId: string;
-        let sampleCinemaInfo: Cinema;
-
         let movieTitleOnCarousel: string;
-
-        await test.step('Pre-test Prep: Find showtime with available seats', async () => {
-
-            const availableShowtimes = await getSampleShowtimesWithAvailableSeats({
-                // request at least 8 seats to minimize chance of sold-out during booking
-                seatQuantity: 8,
-                sampleSize: 1
-            });
-
-            test.skip(availableShowtimes.length === 0, 'Test skipped: No showtimes with available seats found.');
-
-            const sampleShowtime = availableShowtimes[0];
-            sampleShowtimeIdString = sampleShowtime.maLichChieu.toString();
-
-            // Find cinema info for that showtime 
-            const sampleCinemaId = await findCinemaByShowtimeId(sampleShowtimeIdString);
-            sampleCinemaInfo = await getCinemaInfoById(sampleCinemaId);
-
-            // Find movie Id for that showtime (use name would be less reliable due to duplicates)
-            sampleMovieId = await findMovieIdByShowtimeId(sampleShowtime.maLichChieu.toString());
-        });
-
-        await test.step('Login and redirect to Homepage', async () => {
-
-            const loginPage = new LoginPage(page);
-            await loginPage.navigateToLoginPage();
-
-            await loginPage.fillLoginFormAndSubmit(user.taiKhoan, user.matKhau);
-            await loginPage.verifySuccessMsgAndLoggedInStatus();
-
-            await loginPage.verifyNavigationToHomePage();
-        });
 
         await test.step('Wait for movie carousel on Homepage to load', async () => {
             await homePage.featuredMoviesCarousel.waitForCarouselLoaded();
         });
 
         await test.step('Browse carousel for a movie and navigate to movie detail page', async () => {
-
             // Browse carousel slides to find the movie and capture its title
             await homePage.featuredMoviesCarousel.browseCarouselToFindMovie(sampleMovieId);
             movieTitleOnCarousel = (await homePage.featuredMoviesCarousel.getMovieInfoByMovieId(sampleMovieId)).tenPhim;
 
             // Click to go to movie detail page
             await homePage.featuredMoviesCarousel.clickGoToMoviePageLink(sampleMovieId);
-
             await homePage.featuredMoviesCarousel.verifyNavigationToMovieDetailPage(sampleMovieId);
         });
 
-        await test.step('Verify movie title on page matches on carousel', async () => {
+        await test.step('Verify movie title on movie detail page is correct', async () => {
             moviePage = new MoviePage(page);
-
             const movieTitleOnPage = await moviePage.getMovieTitle();
 
             expect(movieTitleOnPage, 'Movie title on page mismatched').toBe(movieTitleOnCarousel);
@@ -163,13 +109,16 @@ test.describe('E2E: User Journey - Discovery & Browsing', () => {
         await test.step('Select cinema to find showtime and click on showtime link', async () => {
 
             await moviePage.movieShowtimesTabs.waitForShowtimesLoaded();
-            await moviePage.movieShowtimesTabs.selectCinemaTabByName(sampleCinemaInfo.tenHeThongRap);
 
-            await moviePage.movieShowtimesTabs.clickShowtimeLinkById(sampleShowtimeIdString);
+            const cinemaId = await findCinemaIdByShowtimeId(sampleShowtime);
+            const cinemaName = (await getCinemaSystem(cinemaId)).tenHeThongRap;
+            await moviePage.movieShowtimesTabs.selectCinemaTabByName(cinemaName);
+
+            await moviePage.movieShowtimesTabs.clickShowtimeLinkById(sampleShowtime);
         });
 
         await test.step('Verify navigate to showtime booking page', async () => {
-            await moviePage.verifyNavigationToShowtimePage(sampleShowtimeIdString);
+            await moviePage.verifyNavigationToShowtimePage(sampleShowtime);
         });
 
         await test.step('Select seats and complete booking as logged-in user', async () => {
@@ -184,47 +133,7 @@ test.describe('E2E: User Journey - Discovery & Browsing', () => {
 
     });
 
-    test('Location-First User: Browse Cinema Tabs → Browse Locations → Select Showtime → Book', async ({ page }) => {
-
-        const homePage = new HomePage(page);
-
-        const user = userE2EJourney[2];
-
-        let sampleShowtime: ShowtimeInfo;
-        let sampleShowtimeIdString: string;
-        let sampleMovieId: string;
-        let sampleCinemaAlias: string;
-
-        await test.step('Pre-test Prep: Find showtime with available seats', async () => {
-
-            const findAvailableShowtime = await getSampleShowtimesWithAvailableSeats({
-                // request at least 5 seats to minimize chance of sold-out during booking
-                seatQuantity: 5,
-                sampleSize: 1
-            });
-
-            test.skip(findAvailableShowtime.length === 0, 'Test skipped: No available showtimes found.');
-
-            sampleShowtime = findAvailableShowtime[0];
-            sampleShowtimeIdString = sampleShowtime.maLichChieu.toString();
-
-            // Find cinema info for that showtime 
-            const sampleCinemaId = await findCinemaByShowtimeId(sampleShowtimeIdString);
-            const sampleCinemaInfo = await getCinemaInfoById(sampleCinemaId);
-            sampleCinemaAlias = sampleCinemaInfo.tenHeThongRap;
-
-            // Find movie Id for that showtime (use name would be less reliable due to duplicates)
-            sampleMovieId = await findMovieIdByShowtimeId(sampleShowtime.maLichChieu.toString());
-        });
-
-        await test.step('Login to test user account', async () => {
-
-            const loginPage = new LoginPage(page);
-            await loginPage.navigateToLoginPage();
-
-            await loginPage.fillLoginFormAndSubmit(user.taiKhoan, user.matKhau);
-            await loginPage.verifySuccessMsgAndLoggedInStatus();
-        });
+    test('Location-First User: Browse Cinema Tabs → Browse Locations → Select Showtime → Book', async ({ page, homePage }) => {
 
         await test.step('Navigate to Homepage and Wait for cinema tabs to load', async () => {
             await homePage.navigateToHomePageAndWait();
@@ -232,13 +141,15 @@ test.describe('E2E: User Journey - Discovery & Browsing', () => {
         });
 
         await test.step('Select cinema, branch and click on showtime link', async () => {
-            await homePage.cinemaShowtimesTabs.selectCinemaByAliasAndVerifyBranchesUpdated(sampleCinemaAlias);
-            await homePage.cinemaShowtimesTabs.selectBranchByNameAndVerifyShowtimesUpdated(sampleShowtime.tenCumRap);
-            await homePage.cinemaShowtimesTabs.selectShowtimeById(sampleShowtimeIdString);
+            const cinemaId = await findCinemaIdByShowtimeId(sampleShowtime);
+            const cinemaAlias = (await getCinemaSystem(cinemaId)).biDanh;
+            await homePage.cinemaShowtimesTabs.selectCinemaByAliasAndVerifyBranchesUpdated(cinemaAlias);
+            await homePage.cinemaShowtimesTabs.selectBranchByNameAndVerifyShowtimesUpdated(await getBranchNameByShowtimeId(sampleShowtime)); // need to check
+            await homePage.cinemaShowtimesTabs.selectShowtimeById(sampleShowtime);
         });
 
         await test.step('Verify navigate to showtime booking page', async () => {
-            await homePage.verifyNavigationToShowtimePage(sampleShowtimeIdString);
+            await homePage.verifyNavigationToShowtimePage(sampleShowtime);
         });
 
         await test.step('Select seats and complete booking as logged-in user', async () => {

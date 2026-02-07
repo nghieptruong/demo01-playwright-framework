@@ -1,8 +1,8 @@
-import { calculatePrice, getAvailableSeats } from "../../../api/showtimes/showtimes.helpers";
+import { calculatePrice, getAvailableSeats } from "../../../api/booking/booking.helpers";
 import { expect, test } from "../../../fixtures/custom-fixtures";
 import { ShowtimePage } from "../../../pages/ShowtimePage";
-import { getRandomSeatNumbersPreferConsecutive, getSampleShowtimesWithAvailableSeats } from "../../utils/booking.helpers";
-import { pickRandomNumberBetween } from "../../utils/shared.helpers";
+import { getRandomSeatNumbersPreferConsecutive, getSampleShowtimesWithAvailableSeats } from "../../utils/bookingSampleProvider";
+import { pickRandomNumberBetween } from "../../utils/dataManipulation.helpers";
 
 let showtimePage: ShowtimePage;
 let requiredSeatsMin: number;
@@ -20,14 +20,13 @@ test.describe('Seat Preview Dynamic Behavior', () => {
         let seatsToBook: string[] = [];
 
         await test.step(`Find sample showtimes with available seats to run test`, async () => {
-            const sampleShowtimes = await getSampleShowtimesWithAvailableSeats({ seatQuantity: requiredSeatsMin });
-            sampleShowtimeIds = sampleShowtimes.map(s => s.maLichChieu.toString());
+            sampleShowtimeIds = await getSampleShowtimesWithAvailableSeats({ seatQuantity: requiredSeatsMin });
         });
 
         for (const showtime of sampleShowtimeIds) {
 
             await test.step(`Go to showtime ${showtime} page and pick random available seats to test`, async () => {
-                await showtimePage.navigateToShowtimePageAndWait(showtime);
+                await showtimePage.navigateToShowtimePageAndWaitForSeatMap(showtime);
 
                 // Pick random available seats (default 2)
                 const availableSeats = await getAvailableSeats(showtime);
@@ -71,14 +70,13 @@ test.describe('Price Preview Dynamic Behavior', () => {
         let postAddPrice: number;
 
         await test.step(`Find sample showtimes with available seats to run test`, async () => {
-            const sampleShowtimes = await getSampleShowtimesWithAvailableSeats({ seatQuantity: requiredSeatsMin });
-            sampleShowtimeIds = sampleShowtimes.map(s => s.maLichChieu.toString());
+            sampleShowtimeIds = await getSampleShowtimesWithAvailableSeats({ seatQuantity: requiredSeatsMin });
         });
 
         for (const showtime of sampleShowtimeIds) {
 
             await test.step(`Go to showtime ${showtime} page and pick random available seats to test`, async () => {
-                await showtimePage.navigateToShowtimePageAndWait(showtime);
+                await showtimePage.navigateToShowtimePageAndWaitForSeatMap(showtime);
 
                 // Pick random available seats (3 seats)
                 const availableSeats = await getAvailableSeats(showtime);

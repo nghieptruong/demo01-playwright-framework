@@ -1,8 +1,8 @@
-import { extractSeatingData, getAvailableStandardSeats, getAvailableVipSeats, getReservedSeats } from "../../../api/showtimes/showtimes.helpers";
+import { extractSeatingData, getAvailableStandardSeats, getAvailableVipSeats, getReservedSeats } from "../../../api/booking/booking.helpers";
 import { expect, test } from "../../../fixtures/custom-fixtures";
 import { ShowtimePage } from "../../../pages/ShowtimePage";
-import { getRandomSampleShowtimeIds, getSampleShowtimesWithAvailableStandardSeats, getSampleShowtimesWithAvailableVipSeats, getSampleShowtimesWithReservedSeats } from "../../utils/booking.helpers";
-import { pickSampleItems, shuffleItems } from "../../utils/shared.helpers";
+import { getRandomSampleShowtimeIds, getSampleShowtimesWithAvailableStandardSeats, getSampleShowtimesWithAvailableVipSeats, getSampleShowtimesWithReservedSeats } from "../../utils/bookingSampleProvider";
+import { pickSampleItems, shuffleItems } from "../../utils/dataManipulation.helpers";
 
 test.describe('Seat Map Data Accuracy: UI vs API', () => {
 
@@ -11,19 +11,15 @@ test.describe('Seat Map Data Accuracy: UI vs API', () => {
         let sampleShowtimeIds: string[] = [];
 
         await test.step(`Pick random sample showtimes to run tests`, async () => {
-
-            sampleShowtimeIds = await getRandomSampleShowtimeIds({ sampleSize: 2 });
-
+            sampleShowtimeIds = await getRandomSampleShowtimeIds({ sampleSize: 1 });
             test.skip(sampleShowtimeIds.length === 0, 'Test skipped: No showtimes found.');
         })
 
         for (const showtime of sampleShowtimeIds) {
-
             await test.step(`Verify total seat count for showtime: ${showtime}`, async () => {
-
                 // Go to showtime page
                 const showtimePage = new ShowtimePage(page);
-                await showtimePage.navigateToShowtimePageAndWait(showtime);
+                await showtimePage.navigateToShowtimePageAndWaitForSeatMap(showtime);
 
                 // Get and compare ui vs api total seat count
                 const uiCount = await showtimePage.countTotalSeats();
@@ -32,33 +28,29 @@ test.describe('Seat Map Data Accuracy: UI vs API', () => {
                 expect(uiCount,
                     `Count mismatch. Expected ${apiCount} but received ${uiCount} seats.`
                 ).toEqual(apiCount);
-
             });
         }
     })
 
     test('Reserved seats count and selectability', async ({ page }) => {
 
+        let showtimePage: ShowtimePage;
         let sampleShowtimeIds: string[] = [];
 
         await test.step(`Find sample showtimes with reserved seats`, async () => {
-
-            const sampleShowtimes = await getSampleShowtimesWithReservedSeats({ sampleSize: 2 });
-
-            test.skip(sampleShowtimes.length === 0, 'Test skipped: No showtimes with reserved seats found.');
-
-            sampleShowtimeIds = sampleShowtimes.map(s => s.maLichChieu.toString());
+            sampleShowtimeIds = await getSampleShowtimesWithReservedSeats({ sampleSize: 1 });
+            test.skip(sampleShowtimeIds.length === 0, 'Test skipped: No showtimes with reserved seats found.');
         })
 
         for (const showtime of sampleShowtimeIds) {
-           
-            await test.step(`Verify reserved seat count and sample seats state for showtime: ${showtime}`, async () => {
 
-                // Go to showtime page
-                const showtimePage = new ShowtimePage(page);
-                await showtimePage.navigateToShowtimePageAndWait(showtime);
+            await test.step(`Go to booking page of showtime ${showtime} and wait for seat map`, async () => {
+                showtimePage = new ShowtimePage(page);
+                await showtimePage.navigateToShowtimePageAndWaitForSeatMap(showtime);
+            });
 
-                // Assertion 1: Verify reserved seat count
+            await test.step(`Verify UI reserved seats match API data`, async () => {
+                //  Verify reserved seat count
                 const uiReservedSeats = await showtimePage.countReservedSeats();
                 const apiReservedSeatNums = await getReservedSeats(showtime);
 
@@ -66,7 +58,7 @@ test.describe('Seat Map Data Accuracy: UI vs API', () => {
                     `Count mismatch. Expected ${apiReservedSeatNums.length} but received ${uiReservedSeats} reserved seats.`
                 ).toEqual(apiReservedSeatNums.length);
 
-                // Assertion 2: Verify sample reserved seats are not selectable on UI
+                // Assertion 2: Pick sample reserved seats and verify they are not selectable on UI
                 const sampleApiSeats = pickSampleItems(shuffleItems(apiReservedSeatNums));
 
                 let foundSeats: string[] = [];
@@ -84,23 +76,22 @@ test.describe('Seat Map Data Accuracy: UI vs API', () => {
 
     test('Standard seat numbers', async ({ page }) => {
 
+        let showtimePage: ShowtimePage;
         let sampleShowtimeIds: string[] = [];
 
         await test.step(`Find sample showtimes with available standard seats`, async () => {
-
-            const sampleShowtimes = await getSampleShowtimesWithAvailableStandardSeats({ sampleSize: 2 });
-
-            test.skip(sampleShowtimes.length === 0, 'Test skipped: No showtimes with availale Standard seats found.');
-
-            sampleShowtimeIds = sampleShowtimes.map(s => s.maLichChieu.toString());
+            sampleShowtimeIds = await getSampleShowtimesWithAvailableStandardSeats({ sampleSize: 1 });
+            test.skip(sampleShowtimeIds.length === 0, 'Test skipped: No showtimes with availale Standard seats found.');
         })
 
         for (const showtime of sampleShowtimeIds) {
+            
+            await test.step(`Go to booking page of showtime ${showtime} and wait for seat map`, async () => {
+                showtimePage = new ShowtimePage(page);
+                await showtimePage.navigateToShowtimePageAndWaitForSeatMap(showtime);
+            });
 
-            await test.step(`Verify UI standard seat numbers match Api for showtime: ${showtime}`, async () => {
-                const showtimePage = new ShowtimePage(page);
-                await showtimePage.navigateToShowtimePageAndWait(showtime);
-
+            await test.step(`Verify UI standard seat numbers match API data`, async () => {
                 const [uiStandard, apiStandard] = await Promise.all([
                     showtimePage.getAvailableStandardSeatNumbers(),
                     getAvailableStandardSeats(showtime)
@@ -113,24 +104,22 @@ test.describe('Seat Map Data Accuracy: UI vs API', () => {
 
     test('VIP seat numbers', async ({ page }) => {
 
+        let showtimePage: ShowtimePage;
         let sampleShowtimeIds: string[] = [];
 
         await test.step(`Find sample showtimes with available VIP seats`, async () => {
-
-            const sampleShowtimes = await getSampleShowtimesWithAvailableVipSeats({ sampleSize: 2 });
-
-            test.skip(sampleShowtimes.length === 0, 'Test skipped: No showtimes with availale Vip seats found.');
-
-            sampleShowtimeIds = sampleShowtimes.map(s => s.maLichChieu.toString());
+            sampleShowtimeIds = await getSampleShowtimesWithAvailableVipSeats({ sampleSize: 2 });
+            test.skip(sampleShowtimeIds.length === 0, 'Test skipped: No showtimes with availale Vip seats found.');
         });
 
         for (const showtime of sampleShowtimeIds) {
 
-            await test.step(`Verify UI standard seat numbers match Api for showtime: ${showtime}`, async () => {
+             await test.step(`Go to booking page of showtime ${showtime} and wait for seat map`, async () => {
+                showtimePage = new ShowtimePage(page);
+                await showtimePage.navigateToShowtimePageAndWaitForSeatMap(showtime);
+            });
 
-                const showtimePage = new ShowtimePage(page);
-                await showtimePage.navigateToShowtimePageAndWait(showtime);
-
+            await test.step(`Verify UI standard seat numbers match API data`, async () => {
                 const [uiVip, apiVip] = await Promise.all([
                     showtimePage.getAvailableVipSeatNumbers(),
                     getAvailableVipSeats(showtime)

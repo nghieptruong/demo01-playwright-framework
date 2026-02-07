@@ -1,8 +1,8 @@
 import { expect, Locator, Page } from "@playwright/test";
 import { BaseForm } from "./BaseForm";
-import { pageURLs } from "../tests/utils/routes";
-import { AccountData, AccountDataFields } from "../api/users/accounts.types";
-import { EditableAccountFields } from "../tests/types/auth.types";
+import { pageURLs } from "../tests/utils/pageRoutes";
+import { AccountDataApi, AccountDataFields } from "../api/users/accounts.types";
+import { EditableAccountFields } from "../tests/types/form-ui.types";
 import { OrderHistory } from "./components/OrderHistory";
 
 export class AccountPage extends BaseForm<AccountDataFields> {
@@ -50,9 +50,13 @@ export class AccountPage extends BaseForm<AccountDataFields> {
     // ========== Waits ========== 
 
     async waitForUserInfoForm() {
-        await this.waitForElementVisible(this.formUserInfo);
-        // wait for form animation to complete, unable to find a dynamic wait that works
-        await this.page.waitForTimeout(500);
+        try {
+            // wait for form animation to complete, unable to find a dynamic wait that works
+            await this.page.waitForTimeout(500);
+            await this.waitForElementVisible(this.formUserInfo, 5000);
+        } catch {
+            throw new Error("Account form is not visible");
+        }
     }
 
     async waitForOrderHistoryPanel() {
@@ -124,7 +128,7 @@ export class AccountPage extends BaseForm<AccountDataFields> {
         return isVisible;
     }
 
-    async extractUserDataFromForm(): Promise<AccountData> {
+    async extractUserDataFromForm(): Promise<AccountDataApi> {
         const isVisible = await this.isUserInfoFormVisible();
         if (!isVisible) {
             throw new Error('User info form is not visible, cannot get profile data');

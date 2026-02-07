@@ -1,8 +1,8 @@
 import { test } from "../../fixtures/custom-fixtures";
 import { loginFieldValidationRules } from "../test-data/FieldValidationRules";
-import { loginFieldIds } from "../types/auth.types";
+import { loginFieldIds } from "../types/form-ui.types";
 
-// Importing test data from TypeScript file
+// Importing test data from FieldValidationRules.ts file
 const testData = loginFieldValidationRules;
 
 test.describe('Login Form: Field Validation', () => {

@@ -1,9 +1,9 @@
 import { expect, Locator, Page } from "@playwright/test";
 import { CommonPage } from "./CommonPage";
-import { ShowtimeInfo } from "../api/showtimes/showtimes.types";
+import { ShowtimeInfo } from "../api/booking/booking.types";
 
-import { pageURLPaths, pageURLs } from "../tests/utils/routes";
-import { getRandomSeatNumbersPreferConsecutive } from "../tests/utils/booking.helpers";
+import { pageURLPaths, pageURLs } from "../tests/utils/pageRoutes";
+import { getRandomSeatNumbersPreferConsecutive } from "../tests/utils/bookingSampleProvider";
 import { OrderDetails } from "./shared.types";
 
 export class ShowtimePage extends CommonPage {
@@ -46,21 +46,6 @@ export class ShowtimePage extends CommonPage {
         super(page);
     }
 
-    // ========== Navigation & Wait ==========
-    async navigateToShowtimePageAndWait(showtimeId: string) {
-
-        const url = pageURLs.showtime(showtimeId);
-
-        await this.navigateToPage(url);
-        await this.waitForSeatMapAndPreview();
-
-        return url;
-    }
-
-    async waitForSeatMapAndPreview() {
-        await this.waitForElementVisible(this.seatMap);
-        await this.waitForElementVisible(this.pnlOrderPreview);
-    }
 
     // ========== Locators ==========
     // Seat map
@@ -150,6 +135,22 @@ export class ShowtimePage extends CommonPage {
         return this.page.getByRole('heading', { name: showtimeField, exact: true }).locator('~ h3');
     }
 
+    // ========== Navigation & Wait ==========
+    async navigateToShowtimePageAndWaitForSeatMap(showtimeId: string) {
+
+        const url = pageURLs.showtime(showtimeId);
+
+        await this.navigateToPage(url);
+        await this.waitForSeatMapAndPreview();
+
+        return url;
+    }
+
+    async waitForSeatMapAndPreview() {
+        await this.waitForElementVisible(this.seatMap);
+        await this.waitForElementVisible(this.pnlOrderPreview);
+    }
+
     // ========== Get Info ==========
     // Seat map
     getCurrentShowtimeIdNumber(): number {
@@ -209,7 +210,6 @@ export class ShowtimePage extends CommonPage {
         }
 
         return true;
-
     }
 
     // Order preview 
@@ -253,7 +253,8 @@ export class ShowtimePage extends CommonPage {
     }
 
     async getPreviewPriceText(): Promise<string> {
-        return await this.getElementText(this.lblPrice);
+        const fullText = await this.getElementText(this.lblPrice);
+        return fullText.replace(/\D/g, ''); // remove non-digit characters
     }
 
     async getPreviewPrice(): Promise<number> {
@@ -352,7 +353,7 @@ export class ShowtimePage extends CommonPage {
         const showtimeInfo = await this.getShowtimeInfo();
         const seatsToBook = await this.selectAvailableSeatsPreferConsecutive(sampleSize);
         const price = await this.getPreviewPriceText();
-       
+
         return {
             movieTitle: showtimeInfo.tenPhim,
             bookedSeats: seatsToBook,

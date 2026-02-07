@@ -1,17 +1,33 @@
+import { cinemaEndpoints }  from '../config/apiRoutes';
+import { CinemaSystem, BranchBase, CinemaSysSchedule, MovieScheduleByCinema, MovieSchedule } from './cinemas.types';
 
-import { apiURLs } from '../../tests/utils/routes';
-import { Cinema, ShowtimesByCinema } from './cinemas.types';
-
-export async function fetchCinemasList(): Promise<Cinema[]> {
-    const res = await fetch(apiURLs.cinemas);
-    const data: Cinema[] = await res.json();
+// Note: To refactor use Playwright's APIRequestContext
+export async function getCinemaSystems(): Promise<CinemaSystem[]> {
+    const res = await fetch(cinemaEndpoints.systemList());
+    const data: CinemaSystem[] = await res.json();
     return data;
 }
 
-export async function fetchShowtimeDataByCinemaId(cinemaId: string): Promise<ShowtimesByCinema[]> {
-    const res = await fetch(apiURLs.showtimesByCinemaId(cinemaId));
-    const data: ShowtimesByCinema[] = await res.json();
+export async function getCinemaSystem(cinemaId: string): Promise<CinemaSystem> {
+    const res = await fetch(cinemaEndpoints.systemInfo(cinemaId));
+    const data: CinemaSystem[] = await res.json();
+    return data[0];
+}
+
+export async function getCinemaBranches(cinemaId: string): Promise<BranchBase[]> {
+    const res = await fetch(cinemaEndpoints.branchInfo(cinemaId));
+    const data: BranchBase[] = await res.json();
     return data;
 }
 
-// Use fetchScreeningsByMovieId(movieId: number) from movies.helpers.ts to fetch screenings for movie
+export async function getCinemaSchedule(cinemaId: string): Promise<CinemaSysSchedule[]> {
+    const res = await fetch(cinemaEndpoints.systemSchedule(cinemaId));
+    const data: CinemaSysSchedule[] = await res.json();
+    return data;
+}
+
+export async function getMovieSchedule(movieId: string): Promise<MovieScheduleByCinema[]> {
+    const res = await fetch(cinemaEndpoints.movieSchedule(movieId));
+    const data: MovieSchedule = await res.json();
+    return data.heThongRapChieu;
+}

@@ -1,14 +1,21 @@
-import { apiURLs } from "../../tests/utils/routes";
-import { Movie, MovieShowtimesGroupedByCinema, ShowtimesDataForMovie as ShowtimesDataForMovie } from "./movies.types";
+import { movieEndpoints } from "../config/apiRoutes";
+import { Movie } from "../shared.types";
+import { MovieScreenings } from "./movies.types";
 
-export async function fetchMoviesList(): Promise<Movie[]> {
-    const res = await fetch(apiURLs.movies);
+export async function getMovies(): Promise<Movie[]> {
+    const res = await fetch(movieEndpoints.list());
     const data: Movie[] = await res.json();
     return data;
 }
 
-export async function fetchShowtimesByMovieId(movieId: string): Promise<MovieShowtimesGroupedByCinema[]> {  
-    const res = await fetch(apiURLs.showtimesByMovieId(movieId));
-    const data: ShowtimesDataForMovie = await res.json(); 
-    return data.heThongRapChieu;
+export async function getMovie(movieTitle: string): Promise<Movie> {
+    const res = await fetch(movieEndpoints.info(movieTitle));
+    const data: Movie[] = await res.json();
+    return data[0];
+}
+
+export async function getMovieScreenings(movieId: string): Promise<MovieScreenings> {
+    const res = await fetch(movieEndpoints.showtimes(movieId));
+    const data: MovieScreenings = await res.json();
+    return data;
 }

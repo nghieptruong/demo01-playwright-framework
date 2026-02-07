@@ -1,5 +1,3 @@
-// Theater Info For Each Screening:  https://movie0706.cybersoft.edu.vn/api/QuanLyDatVe/LayDanhSachPhongVe?MaLichChieu=${screeningId}
-
 export interface ShowtimeInfo {
     maLichChieu: number;
     tenCumRap: string;
@@ -22,7 +20,7 @@ export interface SeatInfo {
     taiKhoanNguoiDat: string;
 }
 
-export interface ShowtimeDetails {
+export interface BookingData {
     thongTinPhim: ShowtimeInfo;
     danhSachGhe: SeatInfo[];
 }

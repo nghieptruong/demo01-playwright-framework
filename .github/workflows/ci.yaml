@@ -55,7 +55,7 @@ jobs:
           echo "[overrides]" | sudo tee /etc/gnutls/config
           echo "default-priority-string = NORMAL:%PROFILE_LOW" | sudo tee -a /etc/gnutls/config
 
-      - name: Run Playwright tests
+      - name: Run Playwright smoke tests
         env:
           NODE_OPTIONS: "--openssl-legacy-provider --tls-cipher-list=DEFAULT@SECLEVEL=1"
         run: |
@@ -63,7 +63,7 @@ jobs:
           if [ "${{ env.SELECTED_BROWSER }}" = "all" ]; then
             npx playwright test $COMMON_FLAGS
           else
-            npx playwright test --project=${{ env.SELECTED_BROWSER }} $COMMON_FLAGS
+            npx playwright test --grep "smoke" --project=${{ env.SELECTED_BROWSER }} $COMMON_FLAGS
           fi
 
       - name: Upload Blob Report

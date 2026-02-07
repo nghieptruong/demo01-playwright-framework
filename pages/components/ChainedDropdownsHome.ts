@@ -1,7 +1,7 @@
 import { expect, Locator, Page } from "@playwright/test";
 import { BasePage } from "../BasePage";
-import { pickRandomItem, shuffleItems } from "../../tests/utils/shared.helpers";
-import { apiURLs } from "../../tests/utils/routes";
+import { pickRandomItem, shuffleItems } from "../../tests/utils/dataManipulation.helpers";
+import { cinemaEndpoints, movieEndpoints } from "../../api/config/apiRoutes";
 
 export type DropdownOptionInfo = {
     id: string,
@@ -70,7 +70,7 @@ export class ChainedDropdownsHome extends BasePage {
     // ========== Wait Methods ==========
     async waitForMovieOptionsLoaded() {
         const options = this.getOptionsForDropdownFilter(this.selMovieDropdown);
-        await this.waitForElementAttacched(options.first());  // Use 'attached' for hidden options
+        await this.waitForElementAttacched(options.first());
     }
 
     async waitForCinemaOptions() {
@@ -122,6 +122,12 @@ export class ChainedDropdownsHome extends BasePage {
     }
 
     async getBranchOptionsInfo(): Promise<DropdownOptionInfo[]> {
+        try {
+            await this.waitForCinemaOptions();
+        }
+        catch {
+            return [];
+        }
         return await this.getOptionsInfoForDropdown(this.selCinemaBranchDropdown);
     }
 
@@ -205,12 +211,11 @@ export class ChainedDropdownsHome extends BasePage {
             movieId = movieId.toString();
         }
 
-        await Promise.all([
-            this.page.waitForResponse(apiURLs.showtimesByMovieId(movieId)),
-            this.selectDropdownOption(this.selMovieDropdown, movieId),
-        ]);
-
+        this.selectDropdownOption(this.selMovieDropdown, movieId); 
         await expect(this.selMovieDropdown).toHaveValue(movieId);
+
+        // Ensure cinema options are populated before caller proceeds
+        await this.waitForCinemaOptions();
     }
 
     async selectCinemaBranchById(cinemaId: string) {
@@ -223,7 +228,6 @@ export class ChainedDropdownsHome extends BasePage {
     async selectCinemaBranchByName(branchName: string) {
         await this.waitForCinemaOptions();
         await this.selectDropdownOption(this.selCinemaBranchDropdown, branchName);
-
         await expect(this.selCinemaBranchDropdown).toContainText(branchName);
     }
 

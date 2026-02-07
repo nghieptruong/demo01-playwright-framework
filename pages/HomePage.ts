@@ -3,7 +3,7 @@ import { CommonPage } from "./CommonPage";
 import { ChainedDropdownsHome } from "./components/ChainedDropdownsHome";
 import { SlideCarouselHome } from "./components/SlideCarouselHome";
 import { VerticalTabsHome } from "./components/VerticalTabsHome";
-import { pageURLs } from "../tests/utils/routes";
+import { pageURLs } from "../tests/utils/pageRoutes";
 import { SearchBarHome } from "./components/SearchBarHome";
 
 export class HomePage extends CommonPage {

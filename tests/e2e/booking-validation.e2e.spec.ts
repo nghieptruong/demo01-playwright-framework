@@ -1,72 +1,68 @@
-import { findMovieIdByShowtimeId } from "../../api/movies/movies.helpers";
-import { ShowtimeInfo } from "../../api/showtimes/showtimes.types";
+import { BookingData } from "../../api/booking/booking.types";
+import { findMovieIdByShowtimeId } from "../../api/cinemas/helpers";
 import { expect, test } from "../../fixtures/custom-fixtures";
 import { AccountPage } from "../../pages/AccountPage";
 import { HomePage } from "../../pages/HomePage";
 import { LoginPage } from "../../pages/LoginPage";
 import { ShowtimePage } from "../../pages/ShowtimePage";
-import { userBooking } from "../test-data/testUsers";
-import { getSampleShowtimesWithAvailableSeats } from "../utils/booking.helpers";
-
+import { getSampleShowtimesWithAvailableSeats } from "../utils/bookingSampleProvider";
+import { pickRandomNumberBetween } from "../utils/dataManipulation.helpers";
+import { createNewTestUser } from "../utils/testUserProvider";
+import { loginAndGoToHomePage } from "../utils/shared.helpers";
+import { getShowtimeBookingData } from "../../api/booking/booking.api";
+import { AccountDataApi } from "../../api/users/accounts.types";
 
 test.describe('E2E: Booking Validation', () => {
+
+    let showtimePage: ShowtimePage;
+    let accountPage: AccountPage;
+    let homePage: HomePage;
+
+    let sampleShowtimeId: string;
+    let showtimeData: BookingData;
+
+    let user: AccountDataApi;
+    
+    // Variables to hold test data
+    let initialOrderCount: number;
+    let selectedSeats: string[];
+
+    test.beforeEach(async ({ page }) => {
+        await test.step('Find sample showtime with available seats to run test', async () => {
+            showtimePage = new ShowtimePage(page);
+            const numSeatsRequired = pickRandomNumberBetween(1, 8);
+
+            const sampleShowtimes = await getSampleShowtimesWithAvailableSeats({ seatQuantity: numSeatsRequired });
+            test.skip(sampleShowtimes.length === 0, 'Test skipped: No showtimes with available seats found.');
+
+            sampleShowtimeId = sampleShowtimes[0];
+            showtimeData = await getShowtimeBookingData(sampleShowtimeId);
+        });
+
+        await test.step('Login as new test user', async () => {
+            user = await createNewTestUser();
+            const loginPage = new LoginPage(page);
+            await loginAndGoToHomePage(loginPage, user);
+        });
+    });
+
+
     test('Booking must be blocked in the situation of stale seat selection', async ({ page }) => {
 
-        // Initialize pages
-        const homePage = new HomePage(page);
-        let showtimePage: ShowtimePage;
-        let accountPage: AccountPage;
-
-        // Variables to hold test data
-        let initialOrderCount: number;
-        let selectedSeats: string[];
-
-        // Use a test user from test data
-        const user = userBooking[4];
-
-        // Variables to hold sample showtime info
-        let sampleShowtime: ShowtimeInfo;
-        let showtimeId: string;
-        let movieId: string;
-
-        await test.step('Pre-test Prep: Find showtime with available seats', async () => {
-
-            const availableShowtimes = await getSampleShowtimesWithAvailableSeats({
-                // request at least 5 seats to minimize chance of sold-out during test
-                seatQuantity: 5,
-                sampleSize: 2
-            });
-
-            test.skip(availableShowtimes.length !== 2, 'Test skipped: No 2 showtimes with available seats found.');
-
-            sampleShowtime = availableShowtimes[0];
-            showtimeId = sampleShowtime.maLichChieu.toString();
-            movieId = await findMovieIdByShowtimeId(showtimeId);
-        });
-
-        await test.step('Go to Login page and complete login', async () => {
-            const loginPage = new LoginPage(page);
-            await loginPage.navigateToLoginPage();
-
-            await loginPage.fillLoginFormAndSubmit(user.taiKhoan, user.matKhau);
-            await loginPage.verifySuccessMsgAndLoggedInStatus();
-        });
-
         await test.step('Go to Account page to get current order count', async () => {
-
             accountPage = new AccountPage(page);
             await accountPage.navigateToAccountPage();
-
             initialOrderCount = await accountPage.orderHistory.countOrders();
         });
 
         await test.step('Go to Homepage and apply filters to select showtime', async () => {
+            homePage = new HomePage(page);
             await homePage.navigateToHomePageAndWait();
-            await homePage.showtimeSelector.waitForMovieOptionsLoaded();
 
+            const movieId = await findMovieIdByShowtimeId(sampleShowtimeId);
             await homePage.showtimeSelector.selectMovieById(movieId);
-            await homePage.showtimeSelector.selectCinemaBranchByName(sampleShowtime.tenCumRap);
-            await homePage.showtimeSelector.selectShowtimeById(showtimeId);
+            await homePage.showtimeSelector.selectCinemaBranchByName(showtimeData.thongTinPhim.tenCumRap);
+            await homePage.showtimeSelector.selectShowtimeById(sampleShowtimeId);
         });
 
         await test.step('Confirm selection to go to showtime page and make a booking', async () => {
@@ -80,7 +76,6 @@ test.describe('E2E: Booking Validation', () => {
 
             await showtimePage.verifySuccessAlert();
             await showtimePage.exitSuccessAlert();
-
         });
 
         await test.step('Go to account page to verify order succesfully added', async () => {
@@ -95,13 +90,13 @@ test.describe('E2E: Booking Validation', () => {
                 `Order count did not increase after booking. Initial: ${initialOrderCount}, Current: ${newOrderCount}`
             ).toBe(initialOrderCount + 1);
 
-            expect(lastOrder.bookedSeats, 
+            expect(lastOrder.bookedSeats,
                 'Last order booked seats do not match selected seats'
             ).toEqual(selectedSeats);
         });
 
         await test.step('Go back to showtime page and check for stale seat selection state', async () => {
-           
+
             await accountPage.navigateBack();
 
             await showtimePage.waitForSeatMapAndPreview();

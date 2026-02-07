@@ -1,21 +1,22 @@
 import { expect, test } from "../../fixtures/custom-fixtures";
-import { pickSampleIndexes, shuffleIndexes } from "../utils/shared.helpers";
+import { pickSampleIndexes, shuffleIndexes } from "../utils/dataManipulation.helpers";
 
 test.describe('Movie Carousel Functional Tests', () => {
 
     test.beforeEach(async ({ homePage }) => {
-        await homePage.navigateToHomePageAndWait();
-        await homePage.featuredMoviesCarousel.waitForCarouselLoaded();
+        await test.step(`Navigate to Homepage and wait for carousel to load`, async () => {
+            await homePage.navigateToHomePageAndWait();
+            await homePage.featuredMoviesCarousel.waitForCarouselLoaded();
+        });
     });
 
     test.describe('Carousel Slides default and switching behavior', () => {
         test('First carousel slide is pre-selected and populated @regression', async ({ homePage }) => {
-
             // Check selection state of first slide in carousel
             const isSelected = await homePage.featuredMoviesCarousel.isSlideActive(0);
             const countMovies = await homePage.featuredMoviesCarousel.countMovies();
 
-            // Verify the first slide has selected button and populated movie items
+            // Verify the first slide is selected and movie items are displayed
             expect(isSelected).toBe(true);
             expect(countMovies).toBeGreaterThan(0);
         })

@@ -1,10 +1,12 @@
 import { expect, Locator, Page } from "@playwright/test";
-import { extractShowtimeId, pickRandomItem } from "../../tests/utils/shared.helpers";
-import { apiURLs, pageURLPaths } from "../../tests/utils/routes";
-import { matchCinemaIdAndAlias } from "../../api/cinemas/cinemas.helpers";
+import { pickRandomItem } from "../../tests/utils/dataManipulation.helpers";
+import { extractShowtimeId } from "../../tests/utils/shared.helpers";
+import { pageURLPaths } from "../../tests/utils/pageRoutes";
+import { cinemaEndpoints } from "../../api/config/apiRoutes";
+import { findCinemaSysIdByAlias } from "../../api/cinemas/helpers";
 import { VerticalTabsBase } from "./VerticalTabsBase";
 
-export type BranchInfo = {   // where to keep this?
+export type BranchTabUI = {
       tenCumRap: string,
       diaChi: string,
 }
@@ -110,12 +112,12 @@ export class VerticalTabsHome extends VerticalTabsBase {
       }
 
       // ========== Get Info ========== 
-      async getCinemaAlias(cinemaTab: Locator): Promise<string> {
+      async getCinemaAliasFromTab(cinemaTab: Locator): Promise<string> {
             const alias = await this.getTabImageAltText(cinemaTab);
             return alias;
       }
 
-      async getBranchInfo(branchTab: Locator): Promise<BranchInfo> {
+      async getBranchInfoFromTab(branchTab: Locator): Promise<BranchTabUI> {
             await branchTab.waitFor();
 
             const name = this.getBranchNameLocator(branchTab);
@@ -169,7 +171,7 @@ export class VerticalTabsHome extends VerticalTabsBase {
       async getMovieAndShowtimeInfoForSection(movieSection: Locator): Promise<{
             tenPhim: string;
             maLichChieu: string[];
-      }>   {
+      }> {
 
             const movieTitle = await this.getMovieTitleForSection(movieSection);
             const showtimeIds = await this.getAllShowtimeIdsForSection(movieSection);
@@ -198,15 +200,15 @@ export class VerticalTabsHome extends VerticalTabsBase {
             return await this.getAllTabAltTexts(this.cinemaTabList);
       }
 
-      async getCurrentBranchesInfo(): Promise<BranchInfo[]> {
+      async getCurrentBranchesInfo(): Promise<BranchTabUI[]> {
 
             await this.waitForElementVisible(this.branchTabs.first());
             const branches = await this.branchTabs.all();
 
-            let branchList: BranchInfo[] = [];
+            let branchList: BranchTabUI[] = [];
 
             for (const branch of branches) {
-                  const branchInfo = await this.getBranchInfo(branch);
+                  const branchInfo = await this.getBranchInfoFromTab(branch);
                   branchList.push(branchInfo);
             }
             return branchList;
@@ -259,8 +261,7 @@ export class VerticalTabsHome extends VerticalTabsBase {
       }
 
       async selectCinemaByAliasAndVerifyBranchesUpdated(cinemaAlias: string) {
-            const cinemaTab = this.getCinemaTabByCinemaAlias(cinemaAlias);
-            await this.selectCinemaAndWaitBranchTablistUpdated(cinemaTab);
+            await this.selectCinemaAndWaitBranchTablistUpdated(cinemaAlias);
       }
 
       async selectBranchByNameAndVerifyShowtimesUpdated(branchName: string) {
@@ -268,13 +269,17 @@ export class VerticalTabsHome extends VerticalTabsBase {
             await this.selectBranchAndWaitShowtimesUpdated(branchTab);
       }
 
-      async selectCinemaAndWaitBranchTablistUpdated(cinema: Locator) {
+      async selectCinemaAndWaitBranchTablistUpdated(cinema: string | Locator) {
 
+            if (typeof cinema === 'string') {
+                  cinema = this.getCinemaTabByCinemaAlias(cinema);
+            }
+            
             if (await this.isTabSelected(cinema)) return;
 
             // Capture the name of the first displayed branch BEFORE clicking 
             const firstBranchLocator = this.branchTabs.first();
-            const initialFirstBranchName = (await this.getBranchInfo(firstBranchLocator)).tenCumRap;
+            const initialFirstBranchName = (await this.getBranchInfoFromTab(firstBranchLocator)).tenCumRap;
 
             // Select cinema
             await this.selectCinemaAndWaitForApiData(cinema);
@@ -283,44 +288,47 @@ export class VerticalTabsHome extends VerticalTabsBase {
             await expect
                   .poll(async () => {
                         const branch = this.branchTabs.first();
-                        return (await this.getBranchInfo(branch)).tenCumRap;
+                        return (await this.getBranchInfoFromTab(branch)).tenCumRap;
                   }, { message: `Branch list did not update within timeout. Cinema locator: ${cinema}`, timeout: 5000 })
                   .not.toBe(initialFirstBranchName);
       }
 
       async selectCinemaAndWaitForApiData(cinemaTab: Locator) {
 
-            const alias = await this.getCinemaAlias(cinemaTab);
-            const cinemaId = await matchCinemaIdAndAlias(alias);
+            const alias = await this.getCinemaAliasFromTab(cinemaTab);
+            const cinemaId = await findCinemaSysIdByAlias(alias);
 
             const locator = this.getCinemaTabByCinemaAlias(alias);
 
             await Promise.all([
-                  this.page.waitForResponse(apiURLs.showtimesByCinemaId(cinemaId)),
+                  this.page.waitForResponse(cinemaEndpoints.systemSchedule(cinemaId)),
                   this.clickElement(cinemaTab)
             ]);
 
             await expect(locator).toHaveAttribute("aria-selected", "true");
       }
-      
-      async selectBranchAndWaitShowtimesUpdated(branchTab: Locator) {
 
+      async selectBranchAndWaitShowtimesUpdated(branch: Locator | string) {
+            if (typeof branch === 'string') {
+                  branch = this.getBranchTabByBranchName(branch);
+            }
+            
             // Skip if already selected 
-            if (await this.isTabSelected(branchTab)) return;
+            if (await this.isTabSelected(branch)) return;
 
             // Get initial first showtime link href
             const initialFirstLinkTabpanel = this.lnkShowtimes.first();
             const initialFirstId = await this.getShowtimeIdFromLink(initialFirstLinkTabpanel);
 
             // Select branch
-            await this.selectTab(branchTab);
+            await this.selectTab(branch);
 
             // Wait for the first showtime id to change compared to previous
             await expect
                   .poll(async () => {
                         const firstId = this.lnkShowtimes.first();
                         return (await this.getShowtimeIdFromLink(firstId));
-                  }, { message: `Showtimes tabpanel did not update within timeout. Branch locator: ${branchTab}`, timeout: 5000 })
+                  }, { message: `Showtimes tabpanel did not update within timeout. Branch locator: ${branch}`, timeout: 5000 })
                   .not.toBe(initialFirstId);
       }
 

@@ -3,7 +3,7 @@
  * Contains validation test cases for form fields across the application
  */
 
-import { EditableAccountFields, RegisterField } from "../types/auth.types";
+import { EditableAccountFields, RegisterField } from "../types/form-ui.types";
 
 export interface FieldValidationTest {
   case: string;
@@ -15,8 +15,8 @@ export type RegisterFieldValidationRules = Record<RegisterField, { tests: FieldV
 export type AccountFieldValidationRules = Record<EditableAccountFields, { tests: FieldValidationTest[] }>;
 
 export interface LoginFieldValidationRules {
-    taiKhoan: { tests: FieldValidationTest[] };
-    matKhau: { tests: FieldValidationTest[] };
+  taiKhoan: { tests: FieldValidationTest[] };
+  matKhau: { tests: FieldValidationTest[] };
 }
 
 // Register form field validation rules
@@ -151,7 +151,7 @@ export const accountFieldValidationRules: AccountFieldValidationRules = {
   email: registerFieldValidationRules.email,
 
   matKhau: registerFieldValidationRules.matKhau,
-  
+
   soDt: {
     tests: [
       {

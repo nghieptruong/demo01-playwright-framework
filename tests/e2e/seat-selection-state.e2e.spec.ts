@@ -1,49 +1,46 @@
-import { findMovieIdByShowtimeId } from "../../api/movies/movies.helpers";
-import { ShowtimeInfo } from "../../api/showtimes/showtimes.types";
-import { expect, test } from "../../fixtures/custom-fixtures";
-import { HomePage } from "../../pages/HomePage";
-import { ShowtimePage } from "../../pages/ShowtimePage";
-import { getSampleShowtimesWithAvailableSeats } from "../utils/booking.helpers";
 
+import { BookingData } from "../../api/booking/booking.types";
+import { findMovieIdByShowtimeId } from "../../api/cinemas/helpers";
+import { expect, test } from "../../fixtures/custom-fixtures";
+import { ShowtimePage } from "../../pages/ShowtimePage";
+import { getSampleShowtimesWithAvailableSeats } from "../utils/bookingSampleProvider";
+import { pickRandomNumberBetween } from "../utils/dataManipulation.helpers";
+import { getShowtimeBookingData } from "../../api/booking/booking.api";
 
 test.describe('E2E: Seat Selection State Isolation', () => {
-    test('Seat selection is cleared when switching to another showtime', async ({ page }) => {
 
-        const homePage = new HomePage(page);
+    test('Seat selection is cleared when switching to another showtime', async ({ page, homePage }) => {
         let showtimePage: ShowtimePage;
-
-        let sampleShowtimeA: ShowtimeInfo;
-        let sampleShowtimeB: ShowtimeInfo;
 
         let showtimeIdA: string;
         let showtimeIdB: string;
+
+        let showtimeAData: BookingData;
+        let showtimeBData: BookingData;
 
         let movieIdA: string;
         let movieIdB: string;
 
         let selectedSeats: string[];
 
-        await test.step('Pre-test Prep: Find showtime with available seats', async () => {
+        await test.step('Find 2 sample showtimes with available seats to run test', async () => {
+            showtimePage = new ShowtimePage(page);
+            const numSeatsRequired = pickRandomNumberBetween(1, 8);
 
-            const availableShowtimes = await getSampleShowtimesWithAvailableSeats({
-                // request at least 8 seats to minimize chance of sold-out during test
-                seatQuantity: 8,
-                sampleSize: 2
-            });
+            const sampleShowtimes = await getSampleShowtimesWithAvailableSeats({ seatQuantity: numSeatsRequired, sampleSize: 2 });
+            test.skip(sampleShowtimes.length !== 2, 'Test skipped: No 2 showtimes with available seats found.');
 
-            test.skip(availableShowtimes.length !== 2, 'Test skipped: No 2 showtimes with available seats found.');
+            showtimeIdA = sampleShowtimes[0];
+            showtimeIdB = sampleShowtimes[1];
 
-            sampleShowtimeA = availableShowtimes[0];
-            sampleShowtimeB = availableShowtimes[1];
-
-            showtimeIdA = sampleShowtimeA.maLichChieu.toString();
-            showtimeIdB = sampleShowtimeB.maLichChieu.toString();
+            showtimeAData = await getShowtimeBookingData(showtimeIdA);
+            showtimeBData = await getShowtimeBookingData(showtimeIdB);
 
             movieIdA = await findMovieIdByShowtimeId(showtimeIdA);
             movieIdB = await findMovieIdByShowtimeId(showtimeIdB);
         });
 
-        await test.step('Go to Homepagenand Wait for dropdowns seletor to load', async () => {
+        await test.step('Go to Homepage and Wait for dropdowns to load', async () => {
             await homePage.navigateToHomePageAndWait();
             await homePage.showtimeSelector.waitForMovieOptionsLoaded();
         });
@@ -51,7 +48,7 @@ test.describe('E2E: Seat Selection State Isolation', () => {
         await test.step('Apply filters to find and select the wanted showtime', async () => {
             // Apply each filter dropdown to select the showtime
             await homePage.showtimeSelector.selectMovieById(movieIdA);
-            await homePage.showtimeSelector.selectCinemaBranchByName(sampleShowtimeA.tenCumRap);
+            await homePage.showtimeSelector.selectCinemaBranchByName(showtimeAData.thongTinPhim.tenCumRap);
             await homePage.showtimeSelector.selectShowtimeById(showtimeIdA);
         });
 
@@ -68,7 +65,7 @@ test.describe('E2E: Seat Selection State Isolation', () => {
             await homePage.showtimeSelector.waitForMovieOptionsLoaded();
 
             await homePage.showtimeSelector.selectMovieById(movieIdB);
-            await homePage.showtimeSelector.selectCinemaBranchByName(sampleShowtimeB.tenCumRap);
+            await homePage.showtimeSelector.selectCinemaBranchByName(showtimeBData.thongTinPhim.tenCumRap);
             await homePage.showtimeSelector.selectShowtimeById(showtimeIdB);
         });
 
@@ -89,13 +86,10 @@ test.describe('E2E: Seat Selection State Isolation', () => {
 
     });
 
-
-    test('Seat selection is cleared when navigating away and back', async ({ page }) => {
-
-        const homePage = new HomePage(page);
+    test('Seat selection is cleared when navigating away and back', async ({ page, homePage }) => {
         let showtimePage: ShowtimePage;
 
-        let sampleShowtime: ShowtimeInfo;
+        let showtimeData: BookingData;
         let showtimeId: string;
         let movieId: string;
 
@@ -111,8 +105,9 @@ test.describe('E2E: Seat Selection State Isolation', () => {
 
             test.skip(availableShowtimes.length === 0, 'Test skipped: No showtimes with available seats found.');
 
-            sampleShowtime = availableShowtimes[0];
-            showtimeId = sampleShowtime.maLichChieu.toString();
+            showtimeId = availableShowtimes[0];
+            showtimeData = await getShowtimeBookingData(showtimeId);
+
             movieId = await findMovieIdByShowtimeId(showtimeId);
         });
 
@@ -124,7 +119,7 @@ test.describe('E2E: Seat Selection State Isolation', () => {
         await test.step('Apply filters to find and select the wanted showtime', async () => {
             // Apply each filter dropdown to select the showtime
             await homePage.showtimeSelector.selectMovieById(movieId);
-            await homePage.showtimeSelector.selectCinemaBranchByName(sampleShowtime.tenCumRap);
+            await homePage.showtimeSelector.selectCinemaBranchByName(showtimeData.thongTinPhim.tenCumRap);
             await homePage.showtimeSelector.selectShowtimeById(showtimeId);
         });
 
@@ -141,8 +136,8 @@ test.describe('E2E: Seat Selection State Isolation', () => {
             await showtimePage.navigateBack();
             await homePage.showtimeSelector.waitForMovieOptionsLoaded();
 
-           await homePage.showtimeSelector.selectMovieById(movieId);
-            await homePage.showtimeSelector.selectCinemaBranchByName(sampleShowtime.tenCumRap);
+            await homePage.showtimeSelector.selectMovieById(movieId);
+            await homePage.showtimeSelector.selectCinemaBranchByName(showtimeData.thongTinPhim.tenCumRap);
             await homePage.showtimeSelector.selectShowtimeById(showtimeId);
         });
 

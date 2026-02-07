@@ -1,7 +1,7 @@
-import { expect, Locator, Page } from "@playwright/test";
+import { expect, Page } from "@playwright/test";
 import { BaseForm } from "./BaseForm";
-import { RegisterField } from "../tests/types/auth.types";
-import { pageURLs } from "../tests/utils/routes";
+import { RegisterField, RegisterFormData } from "../tests/types/form-ui.types";
+import { pageURLs } from "../tests/utils/pageRoutes";
 
 export class RegisterPage extends BaseForm<RegisterField> {
 
@@ -89,18 +89,12 @@ export class RegisterPage extends BaseForm<RegisterField> {
         await this.clickElement(this.btnRegister);
     }
 
-    async fillFormAndSubmit(
-        taiKhoan: string,
-        matKhau: string,
-        confirmPassWord: string,
-        hoTen: string,
-        email: string
-    ) {
-        await this.setValueAndBlur(this.txtUsername, taiKhoan);
-        await this.setValueAndBlur(this.txtPassword, matKhau);
-        await this.setValueAndBlur(this.txtConfirmPassword, confirmPassWord);
-        await this.setValueAndBlur(this.txtFullName, hoTen);
-        await this.setValueAndBlur(this.txtEmail, email);
+    async fillFormAndSubmit(inputs: RegisterFormData) {
+        await this.setValueAndBlur(this.txtUsername, inputs.taiKhoan);
+        await this.setValueAndBlur(this.txtPassword, inputs.matKhau);
+        await this.setValueAndBlur(this.txtConfirmPassword, inputs.confirmPassWord);
+        await this.setValueAndBlur(this.txtFullName, inputs.hoTen);
+        await this.setValueAndBlur(this.txtEmail, inputs.email);
 
         await this.clickRegister();
     }

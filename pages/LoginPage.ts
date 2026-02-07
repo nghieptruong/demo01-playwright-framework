@@ -1,7 +1,7 @@
 import { expect, Locator, Page } from "@playwright/test";
 import { BaseForm } from "./BaseForm";
-import { pageURLs } from "../tests/utils/routes";
-import { LoginField } from "../tests/types/auth.types";
+import { pageURLs } from "../tests/utils/pageRoutes";
+import { LoginField } from "../tests/types/form-ui.types";
 
 export class LoginPage extends BaseForm<LoginField> {
 
@@ -72,7 +72,7 @@ export class LoginPage extends BaseForm<LoginField> {
     async fillLoginFormAndSubmit(username: string, password: string) {
         await this.setValueAndBlur(this.txtUsername, username);
         await this.setValueAndBlur(this.txtPassword, password);
-        
+
         await this.clickElement(this.btnLogin);
     }
 
@@ -83,7 +83,7 @@ export class LoginPage extends BaseForm<LoginField> {
     }
 
     async verifyInvalidCredentialAlert() {
-        
+
         await expect.soft(this.alertInvalidCredentials, 'Invalid credentials alert not visible.'
         ).toBeVisible();
 
@@ -95,7 +95,7 @@ export class LoginPage extends BaseForm<LoginField> {
         await expect.soft(this.alertPasswordFieldError,
             'Password field error message not visible.'
         ).toBeVisible();
-    }   
+    }
 
     async verifyBlankPasswordErrorMsg() {
 
@@ -105,7 +105,7 @@ export class LoginPage extends BaseForm<LoginField> {
 
         await expect.soft(this.alertPasswordFieldError,
             'Blank password error message text mismatch.'
-        ).toHaveText(LoginPage.ERROR_MESSAGES.blankField); 
+        ).toHaveText(LoginPage.ERROR_MESSAGES.blankField);
     }
 
 }

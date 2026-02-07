@@ -1,6 +1,6 @@
 import { expect, Locator, Page } from "@playwright/test";
 import { VerticalTabsBase } from "./VerticalTabsBase";
-import { pageURLPaths } from "../../tests/utils/routes";
+import { pageURLPaths } from "../../tests/utils/pageRoutes";
 import { extractShowtimeId } from "../../tests/utils/shared.helpers";
 
 export class VerticalTabsMovie extends VerticalTabsBase {
@@ -19,7 +19,7 @@ export class VerticalTabsMovie extends VerticalTabsBase {
     async waitForShowtimesLoaded() {
         await this.waitForElementVisible(this.lnkShowtimes.first());
     }
-    
+
     // ========== Locators ==========
     get cinemaTabList() {
         return this.tabLists;
@@ -44,7 +44,7 @@ export class VerticalTabsMovie extends VerticalTabsBase {
     getLnkShowtimeById(showtimeId: string): Locator {
         const href = `${pageURLPaths.showtime}${showtimeId}`;
         return this.root.locator(`a[href*='${href}']`);
-    }   
+    }
 
     getCinemaTabByCinemaName(cinemaName: string): Locator {
         return this.getTabLocatorByTabName(this.cinemaTabList, cinemaName);
@@ -75,7 +75,7 @@ export class VerticalTabsMovie extends VerticalTabsBase {
         }
         return cinemaAliases;
     }
-    
+
     async getShowtimesGroupedByBranch(): Promise<Record<string, string[]>> {
 
         let branchAndShowtimesMap: Record<string, string[]> = {};

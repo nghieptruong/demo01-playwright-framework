@@ -1,4 +1,4 @@
-export interface AccountData {
+export interface AccountDataApi {
     taiKhoan: string,
     hoTen: string,
     email: string,
@@ -7,7 +7,11 @@ export interface AccountData {
     maLoaiNguoiDung: string,
 }
 
-export const accountDataKeys: readonly (keyof AccountData)[] = [
+export interface RegisterRequestPayload extends AccountDataApi {
+    maNhom: string;
+}
+
+export const accountDataKeys: readonly (keyof AccountDataApi)[] = [
     'taiKhoan',
     'hoTen',
     'email',
@@ -19,3 +23,4 @@ export const accountDataKeys: readonly (keyof AccountData)[] = [
 export type AccountDataFields = typeof accountDataKeys[number];
 
 export const userTypeOptions = ['KhachHang', 'QuanTri'] as const;
+

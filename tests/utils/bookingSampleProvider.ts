@@ -1,7 +1,6 @@
-import { pickRandomItem, shuffleItems } from "./shared.helpers";
-import { extractShowtimeIdsForAllMovies } from "../../api/movies/movies.helpers";
-import { extractShowtimeInfo, getAvailableSeats, getAvailableStandardSeats, getAvailableVipSeats, getReservedSeats } from "../../api/showtimes/showtimes.helpers";
-import { ShowtimeInfo } from "../../api/showtimes/showtimes.types";
+import { pickRandomItem, shuffleItems } from "./dataManipulation.helpers";
+import { getShowtimeIdsForAllMovies } from "../../api/cinemas/helpers";
+import { getAvailableSeats, getAvailableStandardSeats, getAvailableVipSeats, getReservedSeats } from "../../api/booking/booking.helpers";
 
 // Generic filter function for showtimes
 type ShowtimeFilterFn = (showtimeId: string, seatQuantity: number) => Promise<boolean>;
@@ -9,23 +8,21 @@ type ShowtimeFilterFn = (showtimeId: string, seatQuantity: number) => Promise<bo
 async function getSampleShowtimesByFilter(
     filterFn: ShowtimeFilterFn,
     options?: { seatQuantity?: number; sampleSize?: number }
-): Promise<ShowtimeInfo[]> {
+): Promise<string[]> {
 
     const seatQuantity = options?.seatQuantity ?? 1;
-    let sampleSize = options?.sampleSize ?? 2;
+    let sampleSize = options?.sampleSize ?? 1;
 
-    const allShowtimeIds = shuffleItems(await extractShowtimeIdsForAllMovies());
+    const allShowtimeIds = shuffleItems(await getShowtimeIdsForAllMovies());
     sampleSize = Math.min(sampleSize, allShowtimeIds.length);
 
     const shuffledShowtimeIds = shuffleItems(allShowtimeIds);
-    const sampleShowtimes: ShowtimeInfo[] = [];
+    const sampleShowtimes: string[] = [];
 
     for (const id of shuffledShowtimeIds) {
 
         if (await filterFn(id, seatQuantity)) {
-
-            const showtimeInfo = await extractShowtimeInfo(id);
-            sampleShowtimes.push(showtimeInfo);
+            sampleShowtimes.push(id);
         }
 
         if (sampleShowtimes.length >= sampleSize) break;
@@ -37,9 +34,9 @@ async function getSampleShowtimesByFilter(
 // Pick sample showtimes matching conditions
 export async function getRandomSampleShowtimeIds(options?: { sampleSize?: number }) {
 
-    const sampleSize = options?.sampleSize ?? 2;
+    const sampleSize = options?.sampleSize ?? 1;
 
-    const allShowtimeIds = await extractShowtimeIdsForAllMovies();
+    const allShowtimeIds = await getShowtimeIdsForAllMovies();
     const shuffledShowtimes = shuffleItems(allShowtimeIds);
 
     return shuffledShowtimes.slice(0, sampleSize);
@@ -119,7 +116,6 @@ export async function getSampleShowtimesWithReservedSeats(
 }
 
 // Pick sample seats
-
 export function getRandomSeatNumbersPreferConsecutive(seats: string[], sampleSize: number = 2): string[] {
 
     if (seats.length === 0) {

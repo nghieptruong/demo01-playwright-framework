@@ -1,8 +1,8 @@
-import { getAvailableSeats } from '../../../api/showtimes/showtimes.helpers';
+import { getAvailableSeats } from '../../../api/booking/booking.helpers';
 import { test } from '../../../fixtures/custom-fixtures';
 import { ShowtimePage } from '../../../pages/ShowtimePage';
-import { getRandomSeatNumbersPreferConsecutive, getSampleShowtimesWithAvailableSeats } from '../../utils/booking.helpers';
-import { pickRandomNumberBetween } from '../../utils/shared.helpers';
+import { getRandomSeatNumbersPreferConsecutive, getSampleShowtimesWithAvailableSeats } from '../../utils/bookingSampleProvider';
+import { pickRandomNumberBetween } from '../../utils/dataManipulation.helpers';
 
 test.describe('Unauthenticated Booking Restrictions', () => {
     let showtimePage: ShowtimePage;
@@ -12,14 +12,12 @@ test.describe('Unauthenticated Booking Restrictions', () => {
     test.beforeEach(async ({ page }) => {
         showtimePage = new ShowtimePage(page);
 
-        await test.step('Find sample showtimes with available seats to run all guest booking tests', async () => {
-            // Pick sample showtimes (default: 2) with many available seats to minimize sold-out risk (fallback to any available ones)
+        await test.step('Find sample showtimes with available seats to run booking tests', async () => {
+            // Pick sample showtimes (default: 1) with many available seats to minimize sold-out risk (fallback to any available ones)
             requiredSeatQuant = pickRandomNumberBetween(6, 10);
-            const sampleShowtimes = await getSampleShowtimesWithAvailableSeats({ seatQuantity: requiredSeatQuant });
-           
-            test.skip(sampleShowtimes.length === 0, 'Test skipped: No showtimes with available seats found.');
+            sampleShowtimeIds = await getSampleShowtimesWithAvailableSeats({ seatQuantity: requiredSeatQuant });
 
-            sampleShowtimeIds = sampleShowtimes.map(showtime => showtime.maLichChieu.toString());
+            test.skip(sampleShowtimeIds.length === 0, 'Test skipped: No showtimes with available seats found.');
         });
     });
 
@@ -27,13 +25,13 @@ test.describe('Unauthenticated Booking Restrictions', () => {
 
         for (const showtime of sampleShowtimeIds) {
 
-            await test.step(`Attempt to book seats as guest for showtime ${showtime}`, async () => {
+            await test.step(`Attempt to book available seats as guest for showtime ${showtime}`, async () => {
                 // Pick random available seats (default 2)
                 const availableSeats = await getAvailableSeats(showtime);
                 const seatsToBook = getRandomSeatNumbersPreferConsecutive(availableSeats);
 
                 // Go to showtime page and select seats
-                await showtimePage.navigateToShowtimePageAndWait(showtime);
+                await showtimePage.navigateToShowtimePageAndWaitForSeatMap(showtime);
                 await showtimePage.selectNonSelectedSeats(seatsToBook);
 
                 // Attempt to book without login
@@ -52,12 +50,12 @@ test.describe('Unauthenticated Booking Restrictions', () => {
 
         for (const showtime of sampleShowtimeIds) {
 
-            await test.step(`Attempt to book seats as guest for showtime ${showtime}`, async () => {
-                
+            await test.step(`Attempt to book available seats as guest for showtime ${showtime}`, async () => {
+
                 const availableSeats = await getAvailableSeats(showtime);
                 const seatsToBook = getRandomSeatNumbersPreferConsecutive(availableSeats);
 
-                await showtimePage.navigateToShowtimePageAndWait(showtime);
+                await showtimePage.navigateToShowtimePageAndWaitForSeatMap(showtime);
                 initialUrl = page.url();
 
                 await showtimePage.selectNonSelectedSeats(seatsToBook);
@@ -81,5 +79,4 @@ test.describe('Unauthenticated Booking Restrictions', () => {
             });
         }
     })
-
 });

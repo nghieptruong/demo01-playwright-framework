@@ -6,18 +6,14 @@ test.describe('Account Form UI Tests', () => {
     let accountPage: AccountPage;
 
     test.beforeEach(async ({ loggedInHomepage }) => {
-
         accountPage = new AccountPage(loggedInHomepage.homePage.page);
-
         await accountPage.navigateToAccountPage();
         await accountPage.waitForUserInfoForm();
-
     });
 
     test.describe('Password visibility toggle ', () => {
 
         test('Default state: hidden', async () => {
-
             await test.step('Verify password field is hidden by default', async () => {
                 const isVisible = await accountPage.isPasswordVisible();
                 expect(isVisible,
@@ -32,7 +28,6 @@ test.describe('Account Form UI Tests', () => {
             let initialVisibility: boolean;
 
             await test.step('Click visibility toggle and verify state changes accordingly', async () => {
-
                 initialVisibility = await accountPage.isPasswordVisible();
 
                 await accountPage.togglePasswordVisibility();
@@ -54,12 +49,6 @@ test.describe('Account Form UI Tests', () => {
                 ).toBe(initialVisibility);
 
             });
-
         });
     });
-
 });
-
-
-
-

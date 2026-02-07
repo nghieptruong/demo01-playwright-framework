@@ -1,18 +1,20 @@
 import { Locator } from "@playwright/test";
 import { expect, test } from "../../fixtures/custom-fixtures";
-import { pickSampleItems, shuffleItems } from "../utils/shared.helpers";
+import { pickSampleItems, shuffleItems } from "../utils/dataManipulation.helpers";
 
 test.describe('Cinema Screenings Table Functional Test', () => {
 
     test.beforeEach(async ({ homePage }) => {
-        await homePage.navigateToHomePageAndWait();
-        await homePage.cinemaShowtimesTabs.waitForTabsLoaded();
+
+        await test.step(`Navigate to Homepage and wait for cinema tabs to load`, async () => {
+            await homePage.navigateToHomePageAndWait();
+            await homePage.cinemaShowtimesTabs.waitForTabsLoaded();
+        });
     });
 
     test.describe('Default tab selections', () => {
 
         test('Default Cinema Tab auto-selects first cinema', async ({ homePage }) => {
-
             const firstCinema = homePage.cinemaShowtimesTabs.cinemaTabs.first();
             await firstCinema.waitFor();
 

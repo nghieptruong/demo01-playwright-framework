@@ -1,8 +1,8 @@
 import { test } from "../../fixtures/custom-fixtures";
 import { registerFieldValidationRules } from "../test-data/FieldValidationRules";
-import { registerFieldIds } from "../types/auth.types";
+import { registerFieldIds } from "../types/form-ui.types";
 
-// Importing test data 
+// Importing test data from FieldValidationRules.ts
 const testData = registerFieldValidationRules;
 
 test.describe('Register Form: Field Validation', () => {

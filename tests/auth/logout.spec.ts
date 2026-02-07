@@ -1,18 +1,28 @@
 import { test } from "../../fixtures/custom-fixtures";
-import { HomePage } from "../../pages/HomePage";
+import { createNewTestUser, deleteTestUser } from "../utils/testUserProvider";
+import { AccountDataApi } from "../../api/users/accounts.types";
+import { loginAndGoToHomePage } from "../utils/shared.helpers";
 
 test.describe('Logout Functional Tests', () => {
-    let homePage: HomePage;
+    
+    let testUser: AccountDataApi;
 
-    test.beforeEach(async ({ loggedInHomepage }) => {
-        await test.step('Log in and navigate to Homepage', async () => {
-            homePage = new HomePage(loggedInHomepage.homePage.page);
+    test.beforeEach(async ({ loginPage }) => {
+            await test.step('Login as new test user', async () => {
+                testUser = await createNewTestUser();
+                await loginAndGoToHomePage(loginPage, testUser);
+            });
+    })
+    
+    test.afterEach(async () => {
+        await test.step('Delete test user after test', async () => {
+            await deleteTestUser(testUser.taiKhoan);
         });
-    });
-
+    })
+    
     test('Cancel Logout Attempt', async ({ homePage }) => {
 
-        await test.step('Click Logout and cancel at confirmation dialog', async () => {
+        await test.step('Click Logout link on top bar and cancel at confirmation dialog', async () => {
             await homePage.topBarNavigation.clickLogoutLink();
             await homePage.topBarNavigation.cancelLogout();
         });
@@ -22,8 +32,8 @@ test.describe('Logout Functional Tests', () => {
         });
     })
 
-    test('Successful Logout @smoke @regression', async () => {
-        await test.step('Click Logout and confirm at confirmation dialog', async () => {
+    test('Successful Logout @smoke @regression', async ({ homePage }) => {
+        await test.step('Click Logout link on top bar and confirm at confirmation dialog', async () => {
             await homePage.topBarNavigation.clickLogoutLink();
             await homePage.topBarNavigation.confirmLogoutAndVerifySuccessMsg();
         });

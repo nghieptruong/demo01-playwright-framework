@@ -61,7 +61,7 @@ export class OrderHistory extends BasePage {
         const bookedSeats = seatText.replace(OrderHistory.ACCESSIBLE_NAMES.lblBookedSeats, '').trim().split(/\s+/);
 
         const priceText = await this.lblPrice.last().innerText();
-        const price = priceText.replace(OrderHistory.ACCESSIBLE_NAMES.lblPrice, '').trim();
+        const price = priceText.replace(/\D/g, '').trim();
 
         return {
             movieTitle,

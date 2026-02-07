@@ -1,6 +1,6 @@
 import { Page } from "@playwright/test";
 import { CommonPage } from "./CommonPage";
-import { pageURLPaths } from "../tests/utils/routes";
+import { pageURLPaths } from "../tests/utils/pageRoutes";
 import { VerticalTabsMovie } from "./components/VerticalTabsMovie";
 export class MoviePage extends CommonPage {
 
@@ -64,7 +64,7 @@ export class MoviePage extends CommonPage {
         const durationMin = durationText.replace('phút', '').trim();
         return parseInt(durationMin);
     }
- 
+
     async getMovieRating(): Promise<number> {
         const ratingValue = await this.getElementAttribute(this.lblRating, 'aria-valuenow');
         return ratingValue ? parseFloat(ratingValue) / 10 : 0;

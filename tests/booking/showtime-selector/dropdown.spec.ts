@@ -1,11 +1,15 @@
-import { extractShowtimeIdsForAllMovies, findMovieIdByShowtimeId } from "../../../api/movies/movies.helpers";
-import { fetchShowtimeDetailsByShowtimeId } from "../../../api/showtimes/showtimes.api";
+import { getShowtimeBookingData } from "../../../api/booking/booking.api";
+import { findMovieTitleByShowtimeId } from "../../../api/booking/booking.helpers";
+import { getMovie } from "../../../api/movies/movies.api";
 import { expect, test } from "../../../fixtures/custom-fixtures";
-import { pickRandomItem } from "../../utils/shared.helpers";
+import { pickRandomItem } from "../../utils/dataManipulation.helpers";
+import { getShowtimeIdsForAllMovies } from "../../../api/cinemas/helpers";
 
 test.beforeEach(async ({ homePage }) => {
-    await homePage.navigateToHomePageAndWait();
-    await homePage.showtimeSelector.waitForMovieOptionsLoaded();
+    await test.step(`Navigate to Homepage and wait for dropdowns to load`, async () => {
+        await homePage.navigateToHomePageAndWait();
+        await homePage.showtimeSelector.waitForMovieOptionsLoaded();
+    });
 });
 
 test.describe('No default selection', () => {
@@ -40,11 +44,12 @@ test.describe('Valid Ticket Search With Filters', () => {
 
         await test.step(`Find a valid movie, cinema branch, and showtime filter to run test`, async () => {
             // Pick a random showtime first to make sure filters wont return empty showtime
-            sampleShowtimeId = pickRandomItem(await extractShowtimeIdsForAllMovies());
-            const showtimeInfo = await fetchShowtimeDetailsByShowtimeId(sampleShowtimeId);
+            sampleShowtimeId = pickRandomItem(await getShowtimeIdsForAllMovies());
+            const showtimeInfo = await getShowtimeBookingData(sampleShowtimeId);
 
             // Get movieId and cinema branch name from showtime info to select in filters
-            movieId = await findMovieIdByShowtimeId(sampleShowtimeId);
+            const movieTitle = await findMovieTitleByShowtimeId(sampleShowtimeId);
+            movieId = (await getMovie(movieTitle)).maPhim.toString();
             cinemaBranchName = showtimeInfo.thongTinPhim.tenCumRap;
         });
 
@@ -52,7 +57,6 @@ test.describe('Valid Ticket Search With Filters', () => {
             await homePage.showtimeSelector.selectMovieById(movieId);
             await homePage.showtimeSelector.selectCinemaBranchByName(cinemaBranchName);
             await homePage.showtimeSelector.selectShowtimeById(sampleShowtimeId);
-
             await homePage.showtimeSelector.clickFindTicketsButton();
         });
 
@@ -65,29 +69,20 @@ test.describe('Valid Ticket Search With Filters', () => {
 test.describe('Invalid Ticket Search Triggers Alert', async () => {
 
     test('Incomplete Movie Selection Alert', async ({ homePage }) => {
-
         await homePage.showtimeSelector.triggerNoMovieSelectedAlert();
-
         await homePage.showtimeSelector.verifyAndCloseMissingFilterAlert();
         await homePage.verifyNoNavigation();
     });
 
     test('Incomplete Cinema Selection Alert', async ({ homePage }) => {
-
         await homePage.showtimeSelector.triggerNoCinemaSelectedAlert();
-
         await homePage.showtimeSelector.verifyAndCloseMissingFilterAlert();
         await homePage.verifyNoNavigation();
-
     });
 
     test('Incomplete Showtime Selection Alert', async ({ homePage }) => {
-
         await homePage.showtimeSelector.triggerNoShowtimeSelectedAlert();
-
         await homePage.showtimeSelector.verifyAndCloseMissingFilterAlert();
         await homePage.verifyNoNavigation();
     });
-
 })
-

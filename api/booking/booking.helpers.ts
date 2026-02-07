@@ -1,14 +1,15 @@
 
-import { fetchShowtimeDetailsByShowtimeId } from "./showtimes.api";
-import { SeatInfo, ShowtimeInfo } from "./showtimes.types";
+import { getShowtimeBookingData } from "./booking.api";
+import { SeatInfo, ShowtimeInfo } from "./booking.types";
+import { getCinemaIdByBranchName } from '../cinemas/helpers/branch.helpers';
 
 export async function extractShowtimeInfo(showtimeId: string): Promise<ShowtimeInfo> {
-    const showtimeDetails = await fetchShowtimeDetailsByShowtimeId(showtimeId);
+    const showtimeDetails = await getShowtimeBookingData(showtimeId);
     return showtimeDetails.thongTinPhim;
 }
 
 export async function extractSeatingData(showtimeId: string): Promise<SeatInfo[]> {
-    const showtimeDetails = await fetchShowtimeDetailsByShowtimeId(showtimeId);
+    const showtimeDetails = await getShowtimeBookingData(showtimeId);
     return showtimeDetails.danhSachGhe;
 }
 
@@ -51,4 +52,24 @@ export async function calculatePrice(showtimeId: string, seats: string[]): Promi
         price = price + findSeat.giaVe;
     }
     return price;
+}
+
+export async function findCinemaIdByShowtimeId(showtimeId: string): Promise<string> {
+
+    const showtimeData = await getShowtimeBookingData(showtimeId);
+    const brachName = showtimeData.thongTinPhim.tenCumRap;
+
+    return getCinemaIdByBranchName(brachName);
+}
+
+export async function getBranchNameByShowtimeId(showtimeId: string): Promise<string> {
+    const showtimeData = await getShowtimeBookingData(showtimeId);
+    return showtimeData.thongTinPhim.tenCumRap;
+}
+
+export async function findMovieTitleByShowtimeId(showtimeId: string): Promise<string> {
+
+    const showtimeData = await getShowtimeBookingData(showtimeId);
+    const movieName = showtimeData.thongTinPhim.tenPhim;
+    return movieName;
 }

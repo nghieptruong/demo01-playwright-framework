@@ -1,7 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { HomePage } from '../../pages/HomePage';
-import { pickRandomItem } from '../utils/shared.helpers';
-import { userAccountDisplay } from '../test-data/testUsers';
+import { testUser } from '../test-data/testUsers';
 import { LoginPage } from '../../pages/LoginPage';
 
 // This test checks the mobile navigation and search bar at the responsive breakpoint (959px)
@@ -9,14 +8,12 @@ import { LoginPage } from '../../pages/LoginPage';
 test.describe('Responsive design', () => {
 
   let homePage: HomePage;
-  const user = pickRandomItem(userAccountDisplay);
 
   test.beforeEach(async ({ page }) => {
     await page.setViewportSize({ width: 959, height: 800 });
 
     homePage = new HomePage(page);
     await homePage.navigateToHomePageAndWait();
-
   });
 
   test('Mobile menu visiblility and navigation', async ({ page }) => {
@@ -66,10 +63,10 @@ test.describe('Responsive design', () => {
 
     await test.step('Login and verify mobile navigation for logged-in user', async () => {
 
-      // Login to proceed to next steps
+      // Login as default user
       const loginPage = new LoginPage(page);
-      await loginPage.fillLoginFormAndSubmit(user.taiKhoan, user.matKhau);
-
+      await loginPage.navigateToLoginPage;
+      await loginPage.fillLoginFormAndSubmit(testUser.taiKhoan, testUser.matKhau);
 
       // Open mobile menu and verify user displayed name and account navigation
       await homePage.topBarNavigation.verifyNavigationToHomePage();

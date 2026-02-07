@@ -8,9 +8,9 @@ test.describe('Login UI Tests', () => {
 
     test.describe('Password visibility toggle', () => {
 
-        test('Default state: hidden', async ({ loginPage }) => {
+        test('Password visibility default state: hidden', async ({ loginPage }) => {
 
-            await test.step('Verify password field is hidden by default', async () => {
+            await test.step('Verify password is hidden by default', async () => {
                 const isVisible = await loginPage.getPasswordVisibilityState();
 
                 expect(isVisible,
